@@ -57,6 +57,7 @@ DONOR (own donations only). Guests can donate without an account.
 ## How to work
 - For any new feature, plan first and wait for approval.
 - Before saying a task is done, run typecheck, lint and tests, and fix what fails.
-- Never commit or push; I do that after reviewing.
+- Git: you may commit and push code, and that is all. Never create pull requests, and don't use other
+  GitHub features (issues, releases, merging or closing on GitHub). Never force-push.
 - After a feature is done, update docs/PROGRESS.md.
 - When unsure about a product decision, ask me. Don't guess.
