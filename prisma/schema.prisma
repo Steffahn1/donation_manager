@@ -1,0 +1,143 @@
+// Donation Manager database schema.
+// Money is always stored as integer cents in ZAR (no floats, no currency mixing).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  CAMPAIGN_MANAGER
+  DONOR
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum DonationStatus {
+  PENDING // checkout started, waiting for Stripe webhook
+  SUCCEEDED // confirmed paid by Stripe webhook (only status counted in totals)
+  FAILED // card declined / payment failed
+  EXPIRED // donor abandoned checkout
+}
+
+/// A login account. Donors may also give without one (see Donor).
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  role            Role
+  name            String
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+
+  sessions           Session[]
+  verificationTokens EmailVerificationToken[]
+  managedCampaigns   Campaign[]               @relation("CampaignManager")
+  donor              Donor?
+}
+
+model Session {
+  /// SHA-256 hash of the random token stored in the cookie (raw token never stored).
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  /// SHA-256 hash of the token sent by email.
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// The person who gives, identified by email. Exists for guests and account holders.
+/// Linked to a User only after that user has verified the email address.
+model Donor {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime   @default(now())
+  donations Donation[]
+}
+
+model Campaign {
+  id                String         @id @default(cuid())
+  slug              String         @unique
+  name              String
+  description       String
+  targetCents       Int
+  startDate         DateTime       @db.Date
+  endDate           DateTime       @db.Date
+  status            CampaignStatus @default(DRAFT)
+  /// Path to a static image under /public, e.g. "/campaigns/food.jpg"
+  imagePath         String?
+  /// Impact unit, e.g. 50000 cents => "family fed" means R500 feeds 1 family.
+  impactAmountCents Int
+  impactLabel       String
+  managerId         String
+  manager           User           @relation("CampaignManager", fields: [managerId], references: [id])
+  createdAt         DateTime       @default(now())
+  donations         Donation[]
+
+  @@index([managerId])
+}
+
+model Donation {
+  id                      String         @id @default(cuid())
+  donorId                 String
+  donor                   Donor          @relation(fields: [donorId], references: [id])
+  campaignId              String
+  campaign                Campaign       @relation(fields: [campaignId], references: [id])
+  amountCents             Int
+  currency                String         @default("ZAR")
+  /// The name typed for THIS gift. Staff see this (unless anonymous), not Donor.name,
+  /// because one email can be shared (e.g. a household) and Donor.name is never overwritten.
+  donorName               String
+  status                  DonationStatus @default(PENDING)
+  /// When true, no staff screen or export ever shows the donor's identity.
+  isAnonymous             Boolean        @default(false)
+  /// Random id generated when the donor reaches the confirm step. A double-submitted
+  /// confirm form reuses the same donation row and Stripe idempotency key.
+  checkoutAttemptId       String?        @unique
+  /// SHA-256 hash of a random per-browser cookie. "Close my other open payment pages" only ever
+  /// touches pages opened in the same browser, never other people who type the same email.
+  browserKeyHash          String?
+  stripeCheckoutSessionId String?        @unique
+  stripePaymentIntentId   String?        @unique
+  /// SHA-256 hash of the token in the private receipt/status link. Set when the receipt
+  /// email is sent; the raw token only ever exists in that email.
+  receiptTokenHash        String?        @unique
+  failureReason           String?
+  createdAt               DateTime       @default(now())
+  paidAt                  DateTime?
+
+  @@index([campaignId, status, paidAt])
+  @@index([browserKeyHash, campaignId])
+  @@index([donorId])
+}
+
+/// Every Stripe webhook event we have processed. The primary key is Stripe's event id,
+/// so a redelivered or replayed event is detected and ignored (no double counting).
+model StripeEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+}

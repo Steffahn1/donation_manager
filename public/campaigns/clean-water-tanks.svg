@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-label="Clean Water Tanks">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a5f3fc"/><stop offset="1" stop-color="#0891b2"/></linearGradient></defs>
+<rect width="800" height="400" fill="url(#g)"/>
+<circle cx="400" cy="200" r="150" fill="#fff" opacity=".18"/>
+<rect x="340" y="130" width="120" height="140" rx="16" fill="#fff" opacity=".9"/><path d="M340 170h120M340 210h120M340 250h120" stroke="#0e7490" stroke-width="5"/><path d="M400 70c-20 30-30 45-30 58a30 30 0 0060 0c0-13-10-28-30-58z" fill="#0e7490"/>
+<text x="400" y="350" text-anchor="middle" font-family="system-ui, sans-serif" font-size="30" font-weight="700" fill="#0f172a" opacity=".8">Clean Water Tanks</text>
+</svg>
