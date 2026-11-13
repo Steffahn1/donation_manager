@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
-import { db } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
-import { processStripeEvent, type WebhookDb } from "@/lib/stripe-webhook";
+import { errorSummary, stripe } from "@/lib/stripe";
+import { processStripeEvent } from "@/lib/stripe-webhook";
+import { webhookDb } from "@/lib/stripe-webhook-db";
 
 /**
  * Stripe webhook endpoint: the ONLY place a donation becomes SUCCEEDED.
@@ -27,12 +27,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await processStripeEvent(db as unknown as WebhookDb, event);
+    const result = await processStripeEvent(webhookDb, event);
     const log = result.outcome === "ignored" ? console.warn : console.info;
     log(`[stripe] ${event.id} ${event.type}: ${JSON.stringify(result)}`);
     return Response.json({ received: true, ...result });
   } catch (e) {
-    console.error(`[stripe] failed to process ${event.id} ${event.type}`, e);
+    console.error(`[stripe] failed to process ${event.id} ${event.type}`, errorSummary(e));
     // 500 makes Stripe retry later; nothing was recorded because the transaction rolled back.
     return new Response("Processing failed", { status: 500 });
   }

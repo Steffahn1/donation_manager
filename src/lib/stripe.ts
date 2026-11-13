@@ -15,6 +15,48 @@ export function stripe(): Stripe {
   return client;
 }
 
+/**
+ * A TEST-mode Checkout Session id as it arrives from the browser or a URL (bound action
+ * arguments and query strings are NOT trusted). Live ids are rejected: live keys are refused.
+ */
+export function isCheckoutSessionId(value: unknown): value is string {
+  return typeof value === "string" && /^cs_test_[A-Za-z0-9]{10,250}$/.test(value);
+}
+
+/** True when Stripe says the object doesn't exist (e.g. test data deleted, or a different account key). */
+export function isResourceMissing(e: unknown): boolean {
+  return e instanceof Stripe.errors.StripeInvalidRequestError && e.code === "resource_missing";
+}
+
+/**
+ * After a failed "create Checkout Session" call: can the donor press the same button again?
+ * Only if the request never reached Stripe (connection error) or the failure was ours. Any answer
+ * Stripe gave (including a 500) is replayed for the same idempotency key for 24 hours.
+ */
+export function classifyCreateError(e: unknown): "retry" | "restart" {
+  if (e instanceof Stripe.errors.StripeConnectionError) return "retry";
+  // Not stored against the idempotency key, so pressing again can work:
+  // 429 rate limit, and 409 "the same request is still running" (e.g. a duplicated tab).
+  if (e instanceof Stripe.errors.StripeRateLimitError) return "retry";
+  if (e instanceof Stripe.errors.StripeError && e.code === "idempotency_key_in_use") return "retry";
+  if (e instanceof Stripe.errors.StripeError) return "restart";
+  return "retry";
+}
+
+/**
+ * Safe-to-log summary of an error from Stripe or the database. Never logs the message:
+ * Stripe echoes rejected parameter values (e.g. an email address) back in it.
+ */
+export function errorSummary(e: unknown): Record<string, string | number | undefined> {
+  if (e instanceof Stripe.errors.StripeError) {
+    return { source: "stripe", type: e.type, code: e.code, statusCode: e.statusCode, requestId: e.requestId };
+  }
+  if (e instanceof Error) {
+    return { source: "app", name: e.name, code: (e as { code?: string }).code };
+  }
+  return { source: "unknown" };
+}
+
 export function appUrl(): string {
   return (process.env.APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 }

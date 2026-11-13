@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getDonationByCheckoutSession } from "@/lib/queries/donations";
 import { formatZar, impactUnits } from "@/lib/money";
-import { tryAgain } from "@/app/actions/donate";
 import { PaymentStatusPoller } from "@/components/PaymentStatusPoller";
 
 export const metadata = { title: "Thank you · Donation Manager" };
@@ -37,27 +36,21 @@ export default async function DonateSuccessPage({ searchParams }: PageProps<"/do
               That pays for {units} × {campaign.impactLabel}.
             </p>
           )}
-          <p className="text-sm text-slate-600">A receipt is on its way to your email.</p>
           <Link href={`/campaigns/${campaign.slug}`} className="btn">See the campaign</Link>
         </Message>
       );
     }
+    // Stripe only sends donors here after a COMPLETED payment, so FAILED here means an earlier card
+    // was declined and the success webhook for the later card hasn't arrived yet. Never tell this
+    // donor they weren't charged: wait for the webhook like PENDING.
     case "PENDING":
+    case "FAILED":
       return (
         <Message title="Almost done…">
           <p className="text-slate-700">
             We&apos;re confirming your donation of <strong>{formatZar(donation.amountCents)}</strong> to {campaign.name}.
           </p>
           <PaymentStatusPoller />
-        </Message>
-      );
-    case "FAILED":
-      return (
-        <Message title="Your payment didn't go through">
-          <p className="error">{donation.failureReason ?? "The payment was declined."} You have not been charged.</p>
-          <form action={tryAgain.bind(null, session_id as string)}>
-            <button className="btn">Try again</button>
-          </form>
         </Message>
       );
     case "EXPIRED":

@@ -20,8 +20,10 @@ export type StaffDonationRow = {
   failureReason: string | null;
   createdAt: Date;
   paidAt: Date | null;
+  /** Name typed for this gift (see schema), shown to staff instead of the shared Donor.name. */
+  donorName: string;
   campaign: { id: string; name: string };
-  donor: { id: string; name: string; email: string };
+  donor: { id: string; email: string };
 };
 
 /** What staff are allowed to see. Note: no email or name for anonymous gifts. */
@@ -47,8 +49,9 @@ export const staffDonationSelect = {
   failureReason: true,
   createdAt: true,
   paidAt: true,
+  donorName: true,
   campaign: { select: { id: true, name: true } },
-  donor: { select: { id: true, name: true, email: true } },
+  donor: { select: { id: true, email: true } },
 } as const;
 
 export function toStaffDonation(row: StaffDonationRow): StaffDonation {
@@ -62,7 +65,7 @@ export function toStaffDonation(row: StaffDonationRow): StaffDonation {
     paidAt: row.paidAt,
     campaignId: row.campaign.id,
     campaignName: row.campaign.name,
-    donorName: row.isAnonymous ? ANONYMOUS_LABEL : row.donor.name,
+    donorName: row.isAnonymous ? ANONYMOUS_LABEL : row.donorName,
     donorEmail: row.isAnonymous ? null : row.donor.email,
   };
 }

@@ -20,16 +20,19 @@ import type { DonationStatus } from "@/generated/prisma/client";
 /** The small part of the Prisma client this module needs. */
 export type WebhookTx = {
   stripeEvent: {
-    create(args: { data: { id: string; type: string } }): Promise<unknown>;
+    /** INSERT ... ON CONFLICT DO NOTHING: count is 0 when the event was already recorded. */
+    createMany(args: { data: { id: string; type: string }[]; skipDuplicates: true }): Promise<{ count: number }>;
   };
   donation: {
     updateMany(args: {
       where: { id: string; status: { in: DonationStatus[] } };
       data: {
-        status: DonationStatus;
+        status?: DonationStatus;
         paidAt?: Date;
         stripePaymentIntentId?: string;
         failureReason?: string | null;
+        /** Cleared once no payment page can be open any more (see browser-key.ts). */
+        browserKeyHash?: null;
       };
     }): Promise<{ count: number }>;
     findUnique(args: {
@@ -48,27 +51,23 @@ export type WebhookResult =
   | { outcome: "ignored"; reason: string }
   | { outcome: "applied"; donationId: string; status: DonationStatus; changed: boolean };
 
-/** Prisma unique-constraint violation, without importing the runtime class (keeps tests light). */
-function isUniqueViolation(e: unknown): boolean {
-  return typeof e === "object" && e !== null && (e as { code?: unknown }).code === "P2002";
-}
-
 function idOf(ref: string | { id: string } | null): string | undefined {
   if (!ref) return undefined;
   return typeof ref === "string" ? ref : ref.id;
 }
 
 export async function processStripeEvent(db: WebhookDb, event: Stripe.Event): Promise<WebhookResult> {
-  try {
-    return await db.$transaction(async (tx) => {
-      // Claim the event first. On a replay this throws P2002 and nothing else runs.
-      await tx.stripeEvent.create({ data: { id: event.id, type: event.type } });
-      return applyEvent(tx, event);
+  return db.$transaction(async (tx) => {
+    // Claim the event first. Only a conflict on THIS insert means "already processed"; any other
+    // error (including a unique violation on a donation column) rolls back and Stripe retries.
+    // A concurrent delivery of the same event waits on the primary key, then inserts nothing.
+    const { count } = await tx.stripeEvent.createMany({
+      data: [{ id: event.id, type: event.type }],
+      skipDuplicates: true,
     });
-  } catch (e) {
-    if (isUniqueViolation(e)) return { outcome: "duplicate" };
-    throw e;
-  }
+    if (count === 0) return { outcome: "duplicate" } as const;
+    return applyEvent(tx, event);
+  });
 }
 
 async function applyEvent(tx: WebhookTx, event: Stripe.Event): Promise<WebhookResult> {
@@ -104,6 +103,7 @@ async function applyEvent(tx: WebhookTx, event: Stripe.Event): Promise<WebhookRe
           paidAt: new Date(event.created * 1000),
           stripePaymentIntentId: idOf(session.payment_intent),
           failureReason: null,
+          browserKeyHash: null,
         },
       });
       return { outcome: "applied", donationId, status: "SUCCEEDED", changed: count > 0 };
@@ -115,7 +115,12 @@ async function applyEvent(tx: WebhookTx, event: Stripe.Event): Promise<WebhookRe
       // Only PENDING expires. A FAILED donation stays FAILED so staff still see the decline.
       const { count } = await tx.donation.updateMany({
         where: { id: donationId, status: { in: ["PENDING"] } },
-        data: { status: "EXPIRED" },
+        data: { status: "EXPIRED", browserKeyHash: null },
+      });
+      // The page is closed either way, so the browser link is no longer needed on a FAILED row.
+      await tx.donation.updateMany({
+        where: { id: donationId, status: { in: ["FAILED"] } },
+        data: { browserKeyHash: null },
       });
       return { outcome: "applied", donationId, status: "EXPIRED", changed: count > 0 };
     }

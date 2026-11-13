@@ -108,21 +108,29 @@ model Donation {
   campaign                Campaign       @relation(fields: [campaignId], references: [id])
   amountCents             Int
   currency                String         @default("ZAR")
+  /// The name typed for THIS gift. Staff see this (unless anonymous), not Donor.name,
+  /// because one email can be shared (e.g. a household) and Donor.name is never overwritten.
+  donorName               String
   status                  DonationStatus @default(PENDING)
   /// When true, no staff screen or export ever shows the donor's identity.
   isAnonymous             Boolean        @default(false)
   /// Random id generated when the donor reaches the confirm step. A double-submitted
   /// confirm form reuses the same donation row and Stripe idempotency key.
   checkoutAttemptId       String?        @unique
+  /// SHA-256 hash of a random per-browser cookie. "Close my other open payment pages" only ever
+  /// touches pages opened in the same browser, never other people who type the same email.
+  browserKeyHash          String?
   stripeCheckoutSessionId String?        @unique
   stripePaymentIntentId   String?        @unique
-  /// Random token for the guest's private receipt/status link.
-  receiptToken            String         @unique
+  /// SHA-256 hash of the token in the private receipt/status link. Set when the receipt
+  /// email is sent; the raw token only ever exists in that email.
+  receiptTokenHash        String?        @unique
   failureReason           String?
   createdAt               DateTime       @default(now())
   paidAt                  DateTime?
 
   @@index([campaignId, status, paidAt])
+  @@index([browserKeyHash, campaignId])
   @@index([donorId])
 }
 

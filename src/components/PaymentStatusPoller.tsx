@@ -27,8 +27,8 @@ export function PaymentStatusPoller() {
   if (tries >= MAX_TRIES) {
     return (
       <p className="text-sm text-slate-600">
-        This is taking longer than usual. You don&apos;t need to pay again: we&apos;ll email your receipt as soon as
-        the payment is confirmed. You can refresh this page to check.
+        This is taking longer than usual. You don&apos;t need to pay again. Please refresh this page in a minute
+        to check the status.
       </p>
     );
   }

@@ -72,6 +72,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
         aria-labelledby="confirm-heading"
       >
         <h2 id="confirm-heading" className="text-lg font-semibold">Please confirm your payment</h2>
+        {review.error && <p className="error" role="alert">{review.error}</p>}
         <dl className="divide-y divide-slate-100 rounded-lg border border-slate-200 text-sm">
           <Row label="Campaign" value={campaignName} />
           <Row label="Amount" value={<span className="text-base font-bold">{formatZar(amountCents)}</span>} />

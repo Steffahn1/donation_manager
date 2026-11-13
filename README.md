@@ -36,7 +36,9 @@ Checks: `npm test`, `npm run typecheck`, `npm run lint`.
 2. **Please confirm**: a summary with a warning that accidental donations cannot be refunded. Nothing
    is stored before this step.
 3. **Confirm and pay**: creates a `PENDING` donation and a hosted Stripe Checkout Session, then
-   redirects to Stripe. We never see card details.
+   redirects to Stripe. We never see card details. If Stripe can't be reached, the donation stays
+   `PENDING` (it is not a declined payment). If the request never reached Stripe the donor can press
+   the button again; otherwise they review the donation again.
 4. **Webhook** (`/api/webhooks/stripe`): the only place a donation becomes `SUCCEEDED`. The success
    page just reads the status and refreshes until the webhook has arrived.
 
@@ -61,11 +63,24 @@ this browser tab's `sessionStorage`.
 - The confirm step, plus the button disabled while submitting and while the browser leaves for Stripe.
 - Each confirm screen gets a random attempt id. It is unique on the donation row and is the Stripe
   idempotency key, so a resubmitted confirm form returns the same Checkout Session, not a second one.
+  That includes after a decline: the donor goes back to the still-open payment page.
+- Per browser and campaign, only the newest open payment page stays payable: after opening its page,
+  a request closes older open pages from the same browser (a random cookie, never matched by email,
+  so other people giving with the same email are unaffected). Two tabs submitting at once can't both
+  stay payable. The rules and their tests are in `src/lib/checkout-flow.ts`.
 - Checkout Sessions expire an hour after they are created, so an old payment tab can't be paid much later.
 - Every processed webhook event id is stored in `StripeEvent` in the same transaction as the donation
   update. A redelivered or replayed event is ignored.
 - Status updates are conditional (`WHERE status IN (...)`), so a late or out-of-order event never
   downgrades a `SUCCEEDED` donation.
+
+### Privacy note: the browser cookie
+
+To close a donor's own older payment pages, the app sets a random, httpOnly cookie (`dm_browser`)
+when the donor reaches the confirm step. Each new donation stores only a SHA-256 hash of it. The hash
+links donations made from the same browser, so it is kept only while a payment page can still be
+open: the webhook clears it when a payment completes or a page expires, and anything older than
+70 minutes is cleared on the next checkout. Staff screens never show it.
 
 Test cards: `4242 4242 4242 4242` (succeeds), `4000 0000 0000 0002` (declined),
 `4000 0000 0000 9995` (insufficient funds). Any future expiry date and any CVC.

@@ -6,7 +6,6 @@
  * Run with: npx prisma db seed   (safe to re-run: it wipes and recreates demo data)
  */
 import "dotenv/config";
-import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, type DonationStatus } from "../src/generated/prisma/client";
@@ -193,7 +192,7 @@ async function main() {
           amountCents: pick(AMOUNTS_RAND) * 100,
           status,
           isAnonymous: rand() < 0.2,
-          receiptToken: randomBytes(32).toString("base64url"),
+          donorName: donor.name,
           failureReason: status === "FAILED" ? pick(["Your card was declined.", "Your card has insufficient funds."]) : null,
           createdAt: created,
           paidAt: status === "SUCCEEDED" ? new Date(created.getTime() + 60_000) : null,
@@ -206,14 +205,15 @@ async function main() {
   const closed = campaigns.find((c) => c.status === "CLOSED")!;
   for (let i = 0; i < 30; i++) {
     const created = new Date(closed.startDate.getTime() + Math.floor(rand() * 60) * DAY);
+    const donor = pick(donors);
     await db.donation.create({
       data: {
-        donorId: pick(donors).id,
+        donorId: donor.id,
+        donorName: donor.name,
         campaignId: closed.id,
         amountCents: pick(AMOUNTS_RAND) * 100,
         status: "SUCCEEDED",
         isAnonymous: rand() < 0.2,
-        receiptToken: randomBytes(32).toString("base64url"),
         createdAt: created,
         paidAt: created,
       },
@@ -230,11 +230,11 @@ async function main() {
     await db.donation.create({
       data: {
         donorId: demoDonor.id,
+        donorName: demoDonor.name,
         campaignId: campaign.id,
         amountCents: rands * 100,
         status: "SUCCEEDED",
         isAnonymous: anon,
-        receiptToken: randomBytes(32).toString("base64url"),
         createdAt: daysFromToday(-5),
         paidAt: daysFromToday(-5),
       },

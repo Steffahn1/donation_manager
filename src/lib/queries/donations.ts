@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { isCheckoutSessionId } from "@/lib/stripe";
 
 /**
  * Looks up a donation by its Stripe Checkout Session id for the success/cancelled pages.
@@ -7,7 +8,7 @@ import { db } from "@/lib/db";
  * status, amount and campaign.
  */
 export async function getDonationByCheckoutSession(sessionId: string | string[] | undefined) {
-  if (typeof sessionId !== "string" || !sessionId.startsWith("cs_")) return null;
+  if (!isCheckoutSessionId(sessionId)) return null;
   return db.donation.findUnique({
     where: { stripeCheckoutSessionId: sessionId },
     select: {

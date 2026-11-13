@@ -6,16 +6,27 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { hashPassword, requireRole } from "@/lib/auth";
 import { slugify } from "@/lib/campaigns";
-import { parseRandToCents } from "@/lib/money";
+import { formatZar, parseRandToCents } from "@/lib/money";
 import { Prisma } from "@/generated/prisma/client";
 
 export type AdminFormState = { error?: string; success?: string } | undefined;
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid date.");
+/** Campaign amounts are Postgres INT cents (max ~R21.4m); cap well below that. */
+const MAX_CAMPAIGN_CENTS = 10_000_000_00; // R10 000 000
+
+/** A real calendar date: "2026-02-31" matches the pattern but is rejected. */
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid date.")
+  .refine((v) => {
+    const d = new Date(`${v}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+  }, "Use a valid date.");
 const randAmount = z
   .string()
   .transform((v) => parseRandToCents(v))
-  .refine((v): v is number => v !== null && v > 0, "Enter an amount in rand, e.g. 500 or 500.00.");
+  .refine((v): v is number => v !== null && v > 0, "Enter an amount in rand, e.g. 500 or 500,00.")
+  .refine((v) => v <= MAX_CAMPAIGN_CENTS, `Amounts can be at most ${formatZar(MAX_CAMPAIGN_CENTS)}.`);
 
 const campaignSchema = z
   .object({
@@ -70,17 +81,36 @@ export async function saveCampaign(
     if (campaignId) {
       await db.campaign.update({ where: { id: campaignId }, data });
     } else {
-      await db.campaign.create({ data: { ...data, slug: await uniqueSlug(d.name) } });
+      await createWithUniqueSlug(d.name, data);
     }
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
       return { error: "That campaign no longer exists." };
+    }
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return { error: "Another campaign was saved with the same name at the same moment. Please save again." };
     }
     throw e;
   }
 
   revalidatePath("/", "layout");
   redirect("/admin/campaigns");
+}
+
+/**
+ * The slug check and the insert are not atomic, so two admins saving the same name at once can
+ * collide on the unique slug. Retry with a fresh slug a couple of times before giving up.
+ */
+async function createWithUniqueSlug(name: string, data: Omit<Prisma.CampaignUncheckedCreateInput, "slug">) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await db.campaign.create({ data: { ...data, slug: await uniqueSlug(name) } });
+    } catch (e) {
+      const slugClash =
+        e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002" && attempt < 3;
+      if (!slugClash) throw e;
+    }
+  }
 }
 
 async function uniqueSlug(name: string): Promise<string> {

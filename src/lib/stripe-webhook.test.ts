@@ -11,21 +11,26 @@ type Row = {
   paidAt: Date | null;
   stripePaymentIntentId: string | null;
   failureReason: string | null;
+  browserKeyHash: string | null;
 };
 
 /**
  * Minimal in-memory stand-in for the Prisma client. $transaction snapshots state and
- * restores it on error, like a real rollback; a duplicate event id throws P2002.
+ * restores it on error, like a real rollback; a duplicate event id inserts nothing.
  */
 function fakeDb(rows: Row[]) {
   const state = { events: new Map<string, string>(), donations: new Map(rows.map((r) => [r.id, { ...r }])) };
 
   const tx: WebhookTx = {
     stripeEvent: {
-      async create({ data }) {
-        if (state.events.has(data.id)) throw Object.assign(new Error("Unique constraint"), { code: "P2002" });
-        state.events.set(data.id, data.type);
-        return data;
+      async createMany({ data }) {
+        let count = 0;
+        for (const e of data) {
+          if (state.events.has(e.id)) continue; // ON CONFLICT DO NOTHING
+          state.events.set(e.id, e.type);
+          count++;
+        }
+        return { count };
       },
     },
     donation: {
@@ -68,6 +73,7 @@ const pending = (id = "don_1", amountCents = 50000): Row => ({
   paidAt: null,
   stripePaymentIntentId: null,
   failureReason: null,
+  browserKeyHash: "hash_of_browser",
 });
 
 let seq = 0;
@@ -147,6 +153,19 @@ describe("processStripeEvent", () => {
     expect(row("don_1").status).toBe("SUCCEEDED");
   });
 
+  it("forgets the browser link once no payment page can be open any more", async () => {
+    const { db, row } = fakeDb([pending("paid"), pending("expired"), pending("declined")]);
+    await processStripeEvent(db, completed("paid"));
+    await processStripeEvent(db, expired("expired"));
+    await processStripeEvent(db, failed("declined"));
+    expect(row("declined").browserKeyHash).toBe("hash_of_browser"); // page still open: retry possible
+    await processStripeEvent(db, expired("declined"));
+    expect(row("paid").browserKeyHash).toBeNull();
+    expect(row("expired").browserKeyHash).toBeNull();
+    expect(row("declined").browserKeyHash).toBeNull();
+    expect(row("declined").status).toBe("FAILED");
+  });
+
   it("expires only pending donations; a declined one stays FAILED for staff to see", async () => {
     const { db, row } = fakeDb([pending("a"), pending("b")]);
     await processStripeEvent(db, expired("a"));
@@ -175,6 +194,27 @@ describe("processStripeEvent", () => {
     const event = { id: "evt_other", type: "charge.refunded", data: { object: {} } } as unknown as Stripe.Event;
     expect((await processStripeEvent(db, event)).outcome).toBe("ignored");
     expect(state.events.has("evt_other")).toBe(true);
+  });
+
+  it("does not treat an unrelated unique-constraint error as a duplicate event", async () => {
+    const { db, state, row } = fakeDb([pending()]);
+    const conflicting: WebhookDb = {
+      $transaction: (fn) =>
+        db.$transaction((tx) =>
+          fn({
+            ...tx,
+            donation: {
+              ...tx.donation,
+              updateMany: async () => {
+                throw Object.assign(new Error("Unique constraint on stripePaymentIntentId"), { code: "P2002" });
+              },
+            },
+          }),
+        ),
+    };
+    await expect(processStripeEvent(conflicting, completed("don_1", { eventId: "evt_p2002" }))).rejects.toThrow();
+    expect(state.events.has("evt_p2002")).toBe(false); // not recorded, so Stripe's retry is processed
+    expect(row("don_1").status).toBe("PENDING");
   });
 
   it("rolls back the event record when processing throws, so Stripe can retry", async () => {
