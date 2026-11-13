@@ -8,7 +8,7 @@
 - [x] Public campaign list and detail pages
 - [x] Super admin: create/edit campaigns, assign managers, create manager accounts
 
-## Day 2: Stripe payments (not committed yet)
+## Day 2: Stripe payments (committed)
 - [x] Donate form with confirm step and non-refundable warning (`/donate/[slug]`)
 - [x] Stripe Checkout Session with attempt-id idempotency key (migration `checkout_attempt`)
 - [x] Webhook: completed / payment failed / expired, replay-safe via StripeEvent, forward-only status

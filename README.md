@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Donation Manager
 
-## Getting Started
+Donation management for a small charity: public campaign pages, once-off card donations through
+Stripe (test mode), and staff accounts (super admin and campaign managers). Currency is ZAR only.
 
-First, run the development server:
+> Work in progress. The full write-up (decisions, privacy, limitations, future work) comes on day 5.
+
+## Running locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env            # then fill in the Stripe test keys
+docker compose up -d            # Postgres + Mailpit (inbox at http://localhost:8025)
+npm install
+npx prisma migrate dev          # creates the tables
+npx prisma db seed              # demo users, campaigns and six weeks of donations (wipes the DB!)
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+In a second terminal, forward Stripe webhooks to the app (needs the [Stripe CLI](https://docs.stripe.com/stripe-cli)):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+stripe login
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+# copy the printed whsec_... into STRIPE_WEBHOOK_SECRET in .env and restart `npm run dev`
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Demo logins (from the seed): `admin@charity.local` / `ChangeMe123!`,
+`thandi@charity.local` / `Manager123!`, `donor@example.com` / `Donor123!`.
 
-## Learn More
+Checks: `npm test`, `npm run typecheck`, `npm run lint`.
 
-To learn more about Next.js, take a look at the following resources:
+## How a donation is paid
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Details** (`/donate/[slug]`): amount, name, email, "give anonymously". Validated on the server; the
+   campaign must be `ACTIVE` and today within its dates.
+2. **Please confirm**: a summary with a warning that accidental donations cannot be refunded. Nothing
+   is stored before this step.
+3. **Confirm and pay**: creates a `PENDING` donation and a hosted Stripe Checkout Session, then
+   redirects to Stripe. We never see card details.
+4. **Webhook** (`/api/webhooks/stripe`): the only place a donation becomes `SUCCEEDED`. The success
+   page just reads the status and refreshes until the webhook has arrived.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Event | Effect |
+| --- | --- |
+| `checkout.session.completed` (paid, amount matches) | `PENDING`/`FAILED` → `SUCCEEDED` |
+| `payment_intent.payment_failed` | `PENDING` → `FAILED`, with the decline reason |
+| `checkout.session.expired` | `PENDING` → `EXPIRED` |
 
-## Deploy on Vercel
+Only `SUCCEEDED` donations count towards any total. `FAILED` attempts are kept so staff can see them.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Failed payments
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Stripe Checkout shows a declined card on its own page and lets the donor try another card; the
+donation is marked `FAILED` meanwhile and becomes `SUCCEEDED` if a retry works. If the donor leaves
+instead, `/donate/cancelled` explains they weren't charged and offers **Try again**. That closes the
+old Checkout Session at Stripe (so it can't also be paid in another tab) and refills the form from
+this browser tab's `sessionStorage`.
+
+### Duplicate payments
+
+- The confirm step, plus the button disabled while submitting and while the browser leaves for Stripe.
+- Each confirm screen gets a random attempt id. It is unique on the donation row and is the Stripe
+  idempotency key, so a resubmitted confirm form returns the same Checkout Session, not a second one.
+- Checkout Sessions expire an hour after they are created, so an old payment tab can't be paid much later.
+- Every processed webhook event id is stored in `StripeEvent` in the same transaction as the donation
+  update. A redelivered or replayed event is ignored.
+- Status updates are conditional (`WHERE status IN (...)`), so a late or out-of-order event never
+  downgrades a `SUCCEEDED` donation.
+
+Test cards: `4242 4242 4242 4242` (succeeds), `4000 0000 0000 0002` (declined),
+`4000 0000 0000 9995` (insufficient funds). Any future expiry date and any CVC.

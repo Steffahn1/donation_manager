@@ -111,6 +111,9 @@ model Donation {
   status                  DonationStatus @default(PENDING)
   /// When true, no staff screen or export ever shows the donor's identity.
   isAnonymous             Boolean        @default(false)
+  /// Random id generated when the donor reaches the confirm step. A double-submitted
+  /// confirm form reuses the same donation row and Stripe idempotency key.
+  checkoutAttemptId       String?        @unique
   stripeCheckoutSessionId String?        @unique
   stripePaymentIntentId   String?        @unique
   /// Random token for the guest's private receipt/status link.

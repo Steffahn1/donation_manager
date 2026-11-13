@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-label="School Shoes for Every Child">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfdbfe"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs>
+<rect width="800" height="400" fill="url(#g)"/>
+<circle cx="400" cy="200" r="150" fill="#fff" opacity=".18"/>
+<path d="M300 250v-60c0-10 10-20 25-20h30l20 30c30 5 80 15 105 30 15 10 15 20 15 20z" fill="#1e293b"/><path d="M300 250h195" stroke="#fff" stroke-width="8"/>
+<text x="400" y="350" text-anchor="middle" font-family="system-ui, sans-serif" font-size="30" font-weight="700" fill="#0f172a" opacity=".8">School Shoes for Every Child</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" role="img" aria-label="Community Library Books">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ddd6fe"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>
+<rect width="800" height="400" fill="url(#g)"/>
+<circle cx="400" cy="200" r="150" fill="#fff" opacity=".18"/>
+<rect x="320" y="140" width="40" height="130" fill="#5b21b6"/><rect x="365" y="120" width="40" height="150" fill="#fff"/><rect x="410" y="150" width="40" height="120" fill="#a78bfa"/><rect x="455" y="135" width="30" height="135" fill="#4c1d95" transform="rotate(8 470 270)"/>
+<text x="400" y="350" text-anchor="middle" font-family="system-ui, sans-serif" font-size="30" font-weight="700" fill="#0f172a" opacity=".8">Community Library Books</text>
+</svg>
