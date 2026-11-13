@@ -7,7 +7,7 @@ Tailwind 4, zod, vitest. Currency: ZAR only.
 Next.js 16 has breaking changes. Read node_modules/next/dist/docs/ before writing Next.js code:
 @AGENTS.md
 
-Progress and what's next: docs/PROGRESS.md
+Plan (requirements, design, build order): docs/PLAN.md. Progress and what's next: docs/PROGRESS.md
 
 ## Commands
 - `docker compose up -d`: Postgres + Mailpit (inbox: http://localhost:8025)
