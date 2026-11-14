@@ -37,7 +37,7 @@
       webhook (96 tests)
 - Migration `donor_name_receipt_hash` (also adds `browserKeyHash`): run `npx prisma migrate dev`, then re-seed
 
-## Day 3: Staff dashboards (branch `day-3-dashboards`, pushed for a pull request)
+## Day 3: Staff dashboards (merged in pull request #2)
 - [x] Shared metrics in src/lib/metrics.ts (pure, unit tested): gross raised, donations, unique and
       repeat donors, this week vs last week, new vs returning (per campaign), 28-day daily series for
       the Day 5 chart. Johannesburg days, weeks start Monday. Only SUCCEEDED counts. Each anonymous
@@ -50,7 +50,10 @@
       attempts (latest 50, masked). Another manager's campaign is "not found".
 - [x] Review fixes: anonymous gifts counted separately, linear-time grouping, clearer labels
 - [x] 16 metrics tests (112 tests in total); typecheck, lint and build pass
-- [ ] Check the dashboards against the seeded database (no database on this machine yet)
+- [x] Checked against the seeded database (2026-11-14): each role sees only its campaigns; totals,
+      donation, failed and donor counts match SQL; another manager's campaign shows "not found"
+      with no data; anonymous gifts show as "Anonymous" and no anonymous donor's email or id
+      appears in the page or its RSC payload
 
 ## Day 4: Donors
 - [ ] Donor dashboard: history, campaign progress, total given, impact, anonymity toggle
@@ -65,6 +68,10 @@
 - [ ] README: decisions, privacy, limitations, future work
 
 ## Known issues / notes
+- Blocked staff pages (another manager's campaign, or a donor opening a staff page) return HTTP 200
+  with the "not found" page or a client-side redirect, instead of a 404/redirect status. No data
+  leaks; the status is already sent because the page streams (root loading.tsx) before the access
+  check runs. Fix by checking access before streaming starts, if status codes start to matter.
 - Expired sessions are rejected but never deleted from the database.
 - Several declines on one Checkout page keep only the latest failure reason.
 - A donation whose payment page could never be opened (Stripe unreachable) stays PENDING with no
