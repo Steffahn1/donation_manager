@@ -1,7 +1,7 @@
 # Donation Manager — Plan
 
 Living plan for the project. Status per day is tracked in [PROGRESS.md](PROGRESS.md); rules for working
-on the code are in [CLAUDE.md](../CLAUDE.md). Last updated 2026-11-14 (after Day 2 and its review fixes).
+on the code are in [CLAUDE.md](../CLAUDE.md). Last updated 2026-11-14 (after Day 3).
 
 ## Context
 5-day assessment project ("Payments and people" brief): donation management for a small charity running
@@ -91,7 +91,11 @@ into polish (see Build order).
   - **No staff role (CM or super admin) ever sees the identity.** It is masked server-side to
     "Anonymous" in pages *and* CSVs (`toStaffDonation` in `src/lib/privacy.ts`). Only the donor sees it.
   - A logged-in donor can un-anonymise a donation.
-  - Stats (unique and returning donors) are still computed on the real donor id.
+  - Staff donor stats never link gifts: each anonymous gift counts as its own one-off donor in unique,
+    repeat and new vs returning counts (on dashboards and in CSVs). Counting them under the real donor
+    would let staff work out who gave anonymously (e.g. "1 unique donor" next to "Jane R100" and
+    "Anonymous R500"). Trade-off: unique donors can be slightly high, repeat/returning slightly low.
+    Money totals are unaffected, and the donor's own dashboard still uses their real identity.
 - Public pages never show donor details.
 - No donor names or emails in logs, error messages or URLs. Errors are logged via `errorSummary`, which
   never includes the error message (Stripe echoes rejected values such as emails).
@@ -105,7 +109,8 @@ into polish (see Build order).
   - progress bar of gross raised vs target, labelled "gross, before fees"
   - daily and cumulative pacing, comparing this week with previous weeks (Recharts)
   - number of donations and number of unique donors
-  - new vs returning donors ("returning" means they gave to *this* campaign before)
+  - new vs returning donors ("returning" means they gave to *this* campaign before; anonymous gifts
+    always count as new)
   - donor list (anonymity masked) and failed attempts list
 - **Super admin:** the same metrics across all campaigns, plus a per-campaign summary table and the CM list.
 - **Donor:**
@@ -152,7 +157,9 @@ Dev only: Mailpit (in Docker) via nodemailer, for receipts and verification link
   - `stripe-webhook.ts` + `stripe-webhook-db.ts`: webhook processing and its typed DB adapter
   - `browser-key.ts`: the `dm_browser` cookie
   - `queries/`: server-only database queries
-  - `metrics.ts` (Day 3): shared totals, counts, new vs returning, daily series, reused by dashboards and CSVs
+  - `metrics.ts`: shared totals, counts, new vs returning, daily series (pure, unit tested), reused by
+    dashboards, the Day 5 CSVs and pacing chart
+  - `queries/staff.ts`: staff dashboard queries, all scoped with `campaignScopeFor`
   - `email.ts` (Day 4): nodemailer to Mailpit
 - **Webhook** (`src/app/api/webhooks/stripe/route.ts`): verifies the signature on the raw body, then
   handles `checkout.session.completed`, `checkout.session.expired` and `payment_intent.payment_failed`.
@@ -161,7 +168,8 @@ Dev only: Mailpit (in Docker) via nodemailer, for receipts and verification link
   - donating: `/donate/[slug]` (details → confirm → Stripe), `/donate/success`, `/donate/cancelled`
     (try again), `/receipt/[token]` (Day 4)
   - accounts: `/login`, `/signup` and `/verify-email` (Day 4)
-  - dashboards and admin: `/dashboard` (routed by role), `/admin/campaigns`, `/admin/managers`
+  - dashboards and admin: `/dashboard` (routed by role), `/dashboard/campaigns/[id]` (staff),
+    `/admin/campaigns`, `/admin/managers`
   - exports: `/api/export/*.csv` (Day 5)
 
 ## Build order (the stop line comes after step 4)
@@ -169,7 +177,8 @@ Dev only: Mailpit (in Docker) via nodemailer, for receipts and verification link
    demo donations), auth and roles, campaign create/edit and assignment, public pages.
 2. **Day 2 (done, plus three review rounds):** Stripe Checkout, confirm step, webhooks, failed and
    duplicate handling, cancel/try-again, amount parsing, unit tests.
-3. **Day 3:** CM dashboard (metrics, masking, donor list, failed attempts) and super admin dashboard.
+3. **Day 3 (done):** CM dashboard (metrics, masking, donor list, failed attempts) and super admin
+   dashboard at `/dashboard` and `/dashboard/campaigns/[id]`.
 4. **Day 4:** donor dashboard with impact and anonymity toggle; signup verification and guest linking;
    receipt email and private link (hashed token).
 5. **Day 5:** CSV exports, pacing chart, more tests (metrics, role guards), README (decisions, privacy,

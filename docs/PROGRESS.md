@@ -37,10 +37,20 @@
       webhook (96 tests)
 - Migration `donor_name_receipt_hash` (also adds `browserKeyHash`): run `npx prisma migrate dev`, then re-seed
 
-## Day 3: Staff dashboards
-- [ ] Shared metrics (totals, unique donors, new vs returning, daily series)
-- [ ] Campaign manager dashboard: progress, donor list (masked), failed attempts
-- [ ] Super admin dashboard: all campaigns, per-campaign summary, manager list
+## Day 3: Staff dashboards (branch `day-3-dashboards`, pushed for a pull request)
+- [x] Shared metrics in src/lib/metrics.ts (pure, unit tested): gross raised, donations, unique and
+      repeat donors, this week vs last week, new vs returning (per campaign), 28-day daily series for
+      the Day 5 chart. Johannesburg days, weeks start Monday. Only SUCCEEDED counts. Each anonymous
+      gift counts as its own donor, so the numbers can't link it to the donor's named gifts.
+- [x] Staff queries in src/lib/queries/staff.ts, all scoped with `campaignScopeFor`; donation rows
+      masked with `toStaffDonation`
+- [x] `/dashboard`: super admin sees all campaigns + manager list; a campaign manager sees only theirs;
+      donors get a placeholder until Day 4
+- [x] `/dashboard/campaigns/[id]`: progress, key numbers, donor list (latest 50, masked), failed
+      attempts (latest 50, masked). Another manager's campaign is "not found".
+- [x] Review fixes: anonymous gifts counted separately, linear-time grouping, clearer labels
+- [x] 16 metrics tests (112 tests in total); typecheck, lint and build pass
+- [ ] Check the dashboards against the seeded database (no database on this machine yet)
 
 ## Day 4: Donors
 - [ ] Donor dashboard: history, campaign progress, total given, impact, anonymity toggle
@@ -48,9 +58,10 @@
 - [ ] Receipt email (Mailpit) with private status link
 
 ## Day 5: Reporting and polish
-- [ ] CSV export with date range for each role
-- [ ] Pacing chart (Recharts)
-- [ ] More tests (masking, metrics, role guards)
+- [ ] CSV export with date range for each role (donor counts must come from `computeMetrics`, never
+      a separate count by donorId, or anonymous gifts become linkable again)
+- [ ] Pacing chart (Recharts), using `Metrics.daily` from Day 3
+- [ ] More tests (role guards)
 - [ ] README: decisions, privacy, limitations, future work
 
 ## Known issues / notes
@@ -61,4 +72,6 @@
   rows without a session id (they are not real payments).
 - "Newest page wins" is per browser: a donor using two different browsers can still have two open
   payment pages for the same campaign. Both would be deliberate confirm steps.
+- Dashboard metrics load successful donations into memory (fine for a small charity; move to SQL
+  aggregation if volumes grow a lot).
 - `getUserWithRole()` with no roles rejects everyone, unlike `requireRole()` (review #12, fix by Day 5).
