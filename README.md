@@ -74,6 +74,28 @@ this browser tab's `sessionStorage`.
 - Status updates are conditional (`WHERE status IN (...)`), so a late or out-of-order event never
   downgrades a `SUCCEEDED` donation.
 
+## Donor accounts and receipts
+
+- **Sign up** at `/signup` with just an email address. Every signup shows the same "check your email"
+  page, immediately, whether or not the address already has an account. The email (open it in Mailpit
+  at http://localhost:8025) links to a page where you **choose your name and password and confirm**;
+  only submitting that form verifies the address (email scanners open links automatically). Links last
+  24 hours and work once. An account has no password until it is confirmed, so nobody can sign up
+  with someone else's email and keep access; confirming also ends any other sessions.
+- Donations made with that email are linked to the account **only after it is confirmed**, so nobody
+  can see someone else's gifts by signing up with their address.
+- The donor dashboard shows history, total given, impact and campaign progress. On an anonymous gift
+  the donor can choose **Show my name**; that is permanent, and a named gift can't be made anonymous.
+- Unconfirmed signups are removed after their link expires (24 hours). If someone started a signup
+  with an email the admin later uses for a campaign manager, "Add manager" replaces that unconfirmed
+  signup.
+- When the webhook marks a donation paid, the donor gets **one receipt email** with a private link
+  (`/receipt/[token]`; only a hash of the token is stored). Sending is best effort and never affects
+  the payment.
+
+Signup and receipt emails are sent after the response (Next.js `after()`). When self-hosting, stop the
+server gracefully (SIGTERM) so pending emails still go out.
+
 ### Privacy note: the browser cookie
 
 To close a donor's own older payment pages, the app sets a random, httpOnly cookie (`dm_browser`)

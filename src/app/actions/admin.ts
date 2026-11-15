@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { hashPassword, requireRole } from "@/lib/auth";
 import { slugify } from "@/lib/campaigns";
+import { replaceableSignupWhere } from "@/lib/verification-rules";
 import { formatZar, parseRandToCents } from "@/lib/money";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -134,15 +135,22 @@ export async function createManager(_prev: AdminFormState, formData: FormData): 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { name, email, password } = parsed.data;
 
+  const passwordHash = await hashPassword(password);
   try {
-    await db.user.create({
-      data: {
-        name,
-        email,
-        role: "CAMPAIGN_MANAGER",
-        passwordHash: await hashPassword(password),
-        emailVerifiedAt: new Date(), // created by the admin, so trusted
-      },
+    await db.$transaction(async (tx) => {
+      // Someone may have started a donor signup with this email and never confirmed it. Such an account
+      // has no password, sessions or donations, so it is safe to replace (its links stop working).
+      // Any other existing account still blocks the email (the create below fails with P2002).
+      await tx.user.deleteMany({ where: replaceableSignupWhere(email) });
+      await tx.user.create({
+        data: {
+          name,
+          email,
+          role: "CAMPAIGN_MANAGER",
+          passwordHash,
+          emailVerifiedAt: new Date(), // created by the admin, so trusted
+        },
+      });
     });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {

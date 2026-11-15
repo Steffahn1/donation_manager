@@ -55,10 +55,32 @@
       with no data; anonymous gifts show as "Anonymous" and no anonymous donor's email or id
       appears in the page or its RSC payload
 
-## Day 4: Donors
-- [ ] Donor dashboard: history, campaign progress, total given, impact, anonymity toggle
-- [ ] Signup with email verification; link guest donations after verification
-- [ ] Receipt email (Mailpit) with private status link
+## Day 4: Donors (branch `day-4-donors`, pushed for a pull request)
+- [x] Donor dashboard: history (attempts that never reached Stripe hidden), campaign progress, total
+      given, impact per campaign, "Show my name" on anonymous gifts (one-way, with a confirmation; a
+      named gift can never be made anonymous afterwards)
+- [x] Signup with email verification: signup takes the email only and always answers the same way at
+      once (lookup and email run after the response); the link opens a page where the inbox owner
+      chooses name and password and confirms (email scanners can't verify); confirming ends all other
+      sessions and links guest donations; links last 24 h and work once; unconfirmed accounts have no
+      password and can't log in
+- [x] Review fixes: account pre-hijack closed, signup timing equalised, no user text in the
+      verification email, reveal only on own PAID anonymous gifts with tested decision logic
+- [x] Follow-up fixes: links used up atomically (two simultaneous confirms can't both succeed); login
+      runs the same slow check for unknown emails and refuses unconfirmed donors (src/lib/login.ts);
+      concurrent signups for one email leave one valid link; unconfirmed signups deleted after 24 h;
+      "Add manager" replaces an unconfirmed signup with that email
+- [x] Receipt email after the webhook marks a donation paid, sent once (hash claimed first) and
+      after the webhook response (`after()`); best effort. Private `/receipt/[token]` page (noindex,
+      no-referrer) with status, amount, date, name given, anonymity and campaign progress
+- Migration `password_after_verification` (User.passwordHash optional): run `npx prisma migrate dev`
+- [x] Tests: emails, verification and the confirm step (incl. account created by someone else),
+      donor summary, reveal, login, receipt sending (158 total)
+- [x] Checked against the database + Mailpit (2026-11-14): signup (new, existing and invalid), unverified
+      dashboard, confirm link (opening it changes nothing; works once), linked history and totals,
+      reveal (only own anonymous gifts, one-way), receipt sent once and page contents. Test data removed.
+- [ ] Not yet clicked through in a browser; the receipt has not been triggered by a real Stripe
+      webhook (no Stripe CLI on this machine)
 
 ## Day 5: Reporting and polish
 - [ ] CSV export with date range for each role (donor counts must come from `computeMetrics`, never
@@ -68,6 +90,12 @@
 - [ ] README: decisions, privacy, limitations, future work
 
 ## Known issues / notes
+- No rate limit on signup: someone could trigger many verification emails to one address.
+- Next.js dev logs "InvariantError: Received an underlying cookies object…" when a form is submitted
+  WITHOUT JavaScript and the action returns an error message (e.g. wrong password). The page and the
+  error message still render correctly; normal (JavaScript) submissions don't take this path.
+- Tokens in URLs (`/verify-email?token=…`, `/receipt/<token>`) can show up in hosting access logs.
+- A receipt whose email failed is not retried (best effort, by decision); its link is lost.
 - Blocked staff pages (another manager's campaign, or a donor opening a staff page) return HTTP 200
   with the "not found" page or a client-side redirect, instead of a 404/redirect status. No data
   leaks; the status is already sent because the page streams (root loading.tsx) before the access

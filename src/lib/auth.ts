@@ -23,9 +23,6 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
 
 /** Creates a DB-backed session and sets the httpOnly cookie. Call from a Server Action. */
 export async function createSession(userId: string): Promise<void> {

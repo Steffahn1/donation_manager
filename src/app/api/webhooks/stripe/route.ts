@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import type Stripe from "stripe";
+import { sendReceipt } from "@/lib/receipt-sender";
 import { errorSummary, stripe } from "@/lib/stripe";
 import { processStripeEvent } from "@/lib/stripe-webhook";
 import { webhookDb } from "@/lib/stripe-webhook-db";
@@ -30,6 +32,12 @@ export async function POST(request: Request) {
     const result = await processStripeEvent(webhookDb, event);
     const log = result.outcome === "ignored" ? console.warn : console.info;
     log(`[stripe] ${event.id} ${event.type}: ${JSON.stringify(result)}`);
+    if (result.outcome === "applied" && result.status === "SUCCEEDED" && result.changed) {
+      // After the response: Stripe gets its answer at once, and a slow or failing mail server can't
+      // affect the payment. sendReceipt never throws and sends at most one receipt per donation.
+      const { donationId } = result;
+      after(() => sendReceipt(donationId));
+    }
     return Response.json({ received: true, ...result });
   } catch (e) {
     console.error(`[stripe] failed to process ${event.id} ${event.type}`, errorSummary(e));

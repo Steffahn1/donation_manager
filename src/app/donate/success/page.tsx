@@ -36,6 +36,9 @@ export default async function DonateSuccessPage({ searchParams }: PageProps<"/do
               That pays for {units} × {campaign.impactLabel}.
             </p>
           )}
+          <p className="text-sm text-slate-600">
+            A receipt with a private link to this donation is on its way to your email.
+          </p>
           <Link href={`/campaigns/${campaign.slug}`} className="btn">See the campaign</Link>
         </Message>
       );
