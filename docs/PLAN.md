@@ -198,11 +198,11 @@ Dev only: Mailpit (in Docker) via nodemailer, for receipts and verification link
    duplicate handling, cancel/try-again, amount parsing, unit tests.
 3. **Day 3 (done):** CM dashboard (metrics, masking, donor list, failed attempts) and super admin
    dashboard at `/dashboard` and `/dashboard/campaigns/[id]`.
-4. **Day 4:** donor dashboard with impact and "reveal my name" for anonymous gifts; signup verification and guest linking;
+4. **Day 4 (done):** donor dashboard with impact and "reveal my name" for anonymous gifts; signup verification and guest linking;
    receipt email and private link (hashed token).
-5. **Day 5:** CSV exports, pacing chart, more tests (metrics, role guards), README (decisions, privacy,
-   limitations, future work) and polish. Also: make `getUserWithRole()` with no roles behave like
-   `requireRole()`.
+5. **Day 5 (done):** CSV exports (paid donations only), long-term and week-by-week charts, more tests
+   (exports, role guards, series), README write-up, and a real Stripe end-to-end test. Still open: a
+   visual check of the dashboards and charts in a browser.
 
 ## Verification
 - **Setup:** `docker compose up -d`, `npx prisma migrate dev`, `npx prisma db seed`, `npm run dev`, then

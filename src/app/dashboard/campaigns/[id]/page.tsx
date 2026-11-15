@@ -2,12 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { dateIso } from "@/lib/campaigns";
-import { computeMetrics } from "@/lib/metrics";
+import { computeMetrics, longTermSeries, weeklySeries } from "@/lib/metrics";
 import { formatZar, impactUnits } from "@/lib/money";
 import { failedCounts, getStaffCampaign, metricDonations, staffDonations } from "@/lib/queries/staff";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DonationTable } from "@/components/dashboard/DonationTable";
+import { ExportForm } from "@/components/dashboard/ExportForm";
+import { LongTermChart } from "@/components/charts/LongTermChart";
+import { WeeklyChart } from "@/components/charts/WeeklyChart";
 
 export const metadata = { title: "Campaign dashboard · Donation Manager" };
 
@@ -25,7 +28,12 @@ export default async function StaffCampaignPage({ params }: PageProps<"/dashboar
     staffDonations(user, campaign.id, "SUCCEEDED"),
     staffDonations(user, campaign.id, "FAILED"),
   ]);
-  const m = computeMetrics(rows, new Date());
+  const now = new Date();
+  const m = computeMetrics(rows, now);
+  // Charts get only dates, amounts and donation counts (no donor data). A closed campaign's chart
+  // ends on its last day.
+  const longTerm = longTermSeries(rows, campaign.startDate, now, dateIso(campaign.endDate));
+  const weekly = weeklySeries(rows, now);
   const weekChange = m.thisWeek.raisedCents - m.lastWeek.raisedCents;
   const units = impactUnits(m.raisedCents, campaign.impactAmountCents);
 
@@ -72,6 +80,22 @@ export default async function StaffCampaignPage({ params }: PageProps<"/dashboar
           value={`${m.thisWeek.newDonors} new · ${m.thisWeek.returningDonors} returning`}
           hint="Returning = gave to this campaign before this week (anonymous gifts always count as new)"
         />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2" aria-label="Pacing">
+        <div className="card space-y-2">
+          <h2 className="text-lg font-semibold">Since the start</h2>
+          <LongTermChart data={longTerm} />
+        </div>
+        <div className="card space-y-2">
+          <h2 className="text-lg font-semibold">Week by week</h2>
+          <WeeklyChart data={weekly} />
+        </div>
+      </section>
+
+      <section className="card space-y-3">
+        <h2 className="text-lg font-semibold">Export this campaign&apos;s donations</h2>
+        <ExportForm action="/api/export/donations.csv" campaignId={campaign.id} />
       </section>
 
       <section className="card space-y-0 p-0">

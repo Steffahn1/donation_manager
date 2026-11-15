@@ -8,6 +8,7 @@ import { generateToken, hashToken } from "./tokens";
 import type { Role } from "@/generated/prisma/client";
 
 import { SESSION_COOKIE } from "./session-cookie";
+import { hasRole, routeAccess } from "./access";
 const SESSION_DAYS = 30;
 
 /** The narrow user shape that the rest of the app works with (never the password hash). */
@@ -80,13 +81,19 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireRole(...roles: Role[]): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (roles.length > 0 && !roles.includes(user.role)) redirect("/dashboard");
+  if (!hasRole(user, roles)) redirect("/dashboard");
   return user;
 }
 
-/** Route Handler variant: returns null instead of redirecting, so the handler can send 401/403. */
-export async function getUserWithRole(...roles: Role[]): Promise<CurrentUser | null> {
+/**
+ * Route Handler variant: no redirect. Returns the user, or the HTTP status to send (401 not logged in,
+ * 403 wrong role). Same rule as requireRole: no roles listed means any logged-in user.
+ */
+export async function getUserWithRole(
+  ...roles: Role[]
+): Promise<{ ok: true; user: CurrentUser } | { ok: false; status: 401 | 403 }> {
   const user = await getCurrentUser();
-  if (!user || !roles.includes(user.role)) return null;
-  return user;
+  if (!user) return { ok: false, status: 401 };
+  const access = routeAccess(user, roles);
+  return access.ok ? { ok: true, user } : { ok: false, status: access.status };
 }

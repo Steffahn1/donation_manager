@@ -5,6 +5,7 @@ import { donorStatusLabel, summarizeGiving, visibleDonations } from "@/lib/donor
 import { formatZar } from "@/lib/money";
 import { ProgressBar } from "@/components/ProgressBar";
 import { StatCard } from "./StatCard";
+import { ExportForm } from "./ExportForm";
 import { RevealNameForm } from "@/components/forms/RevealNameForm";
 
 const dateFmt = new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeZone: "Africa/Johannesburg" });
@@ -72,6 +73,11 @@ export async function DonorDashboard({ user }: { user: CurrentUser }) {
               </div>
             </section>
           )}
+
+          <section className="card space-y-3">
+            <h2 className="text-lg font-semibold">Download your donations</h2>
+            <ExportForm action="/api/export/my-donations.csv" />
+          </section>
 
           <section className="card space-y-0 p-0">
             <h2 className="px-5 pt-4 text-lg font-semibold">History</h2>

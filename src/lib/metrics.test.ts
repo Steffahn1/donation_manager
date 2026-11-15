@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { todayIso } from "./campaigns";
-import { computeMetrics, groupByCampaign, sastDate, sastWeekStart, type MetricDonation } from "./metrics";
+import { computeMetrics, groupByCampaign, longTermSeries, sastDate, sastWeekStart, weeklySeries, type MetricDonation } from "./metrics";
 
 // Thursday 12 Nov 2026, 10:00 Johannesburg (08:00 UTC). This week starts Mon 9 Nov 00:00 SAST.
 const NOW = new Date("2026-11-12T08:00:00Z");
@@ -207,5 +207,99 @@ describe("groupByCampaign", () => {
     const started = performance.now();
     expect(groupByCampaign(rows).get("c1")).toHaveLength(50_000);
     expect(performance.now() - started).toBeLessThan(1000); // the old copy-per-row version took far longer
+  });
+});
+
+describe("longTermSeries", () => {
+  it("covers every day from the campaign start to today, with a running total", () => {
+    const s = longTermSeries(
+      [gift({ paidAt: at("2026-11-10T08:00:00Z"), amountCents: 300 }), gift({ paidAt: at("2026-11-12T07:00:00Z"), amountCents: 200 })],
+      at("2026-11-08T22:00:00Z"), // campaign starts Mon 9 Nov (SAST)
+      NOW,
+    );
+    expect(s.map((d) => d.date)).toEqual(["2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12"]);
+    expect(s.map((d) => d.raisedCents)).toEqual([0, 300, 0, 200]);
+    expect(s.at(-1)!.cumulativeCents).toBe(500);
+  });
+
+  it("starts at the first gift if that is before the campaign start, and counts only paid gifts", () => {
+    const s = longTermSeries(
+      [
+        gift({ paidAt: at("2026-11-07T08:00:00Z"), amountCents: 100 }),
+        gift({ donorId: "d9", status: "FAILED", paidAt: null, amountCents: 999 }),
+      ],
+      at("2026-11-09T22:00:00Z"),
+      NOW,
+    );
+    expect(s[0].date).toBe("2026-11-07");
+    expect(s.at(-1)!.cumulativeCents).toBe(100);
+  });
+
+  it("ends at the campaign's last day once it has passed (no tail of empty days after closing)", () => {
+    const s = longTermSeries(
+      [gift({ paidAt: at("2026-11-02T08:00:00Z"), amountCents: 300 })],
+      at("2026-10-31T22:00:00Z"), // starts 1 Nov SAST
+      NOW, // 12 Nov
+      "2026-11-03", // ended 3 Nov
+    );
+    expect(s.map((d) => d.date)).toEqual(["2026-11-01", "2026-11-02", "2026-11-03"]);
+    expect(s.at(-1)!.cumulativeCents).toBe(300);
+  });
+
+  it("counts a payment completed after the last day on the last day, so the total matches 'Raised'", () => {
+    // Confirmed at 23:50 on the last day (3 Nov), paid by Stripe at 00:10 SAST on 4 Nov.
+    const rows = [
+      gift({ paidAt: at("2026-11-02T08:00:00Z"), amountCents: 300 }),
+      gift({ paidAt: at("2026-11-03T22:10:00Z"), amountCents: 200 }),
+    ];
+    const s = longTermSeries(rows, at("2026-10-31T22:00:00Z"), NOW, "2026-11-03");
+    expect(s.at(-1)).toEqual({ date: "2026-11-03", raisedCents: 200, cumulativeCents: 500 });
+    expect(s.at(-1)!.cumulativeCents).toBe(computeMetrics(rows, NOW).raisedCents);
+  });
+
+  it("puts the end of the last day at 23:59:59.999 Johannesburg time", () => {
+    const rows = [
+      gift({ paidAt: at("2026-11-02T21:59:00Z"), amountCents: 1 }), // 2 Nov 23:59 SAST: day before
+      gift({ paidAt: at("2026-11-02T22:00:00Z"), amountCents: 10 }), // 3 Nov 00:00 SAST: last day
+      gift({ paidAt: at("2026-11-03T21:59:59.999Z"), amountCents: 100 }), // 3 Nov 23:59:59.999: last day
+      gift({ paidAt: at("2026-11-03T22:00:00Z"), amountCents: 1000 }), // 4 Nov 00:00: late, counted on last day
+    ];
+    const s = longTermSeries(rows, at("2026-10-31T22:00:00Z"), NOW, "2026-11-03");
+    expect(s.map((d) => d.date)).toEqual(["2026-11-01", "2026-11-02", "2026-11-03"]);
+    expect(s.map((d) => d.raisedCents)).toEqual([0, 1, 1110]);
+    expect(s.at(-1)!.cumulativeCents).toBe(computeMetrics(rows, NOW).raisedCents);
+  });
+
+  it("still runs to today while the campaign's last day is in the future", () => {
+    const s = longTermSeries([], at("2026-11-09T22:00:00Z"), NOW, "2026-12-31");
+    expect(s.at(-1)!.date).toBe("2026-11-12");
+  });
+
+  it("is a single day for a campaign with no gifts that starts today", () => {
+    expect(longTermSeries([], NOW, NOW)).toEqual([{ date: "2026-11-12", raisedCents: 0, cumulativeCents: 0 }]);
+  });
+});
+
+describe("weeklySeries", () => {
+  it("totals Monday–Sunday Johannesburg weeks, oldest first, marking this week as in progress", () => {
+    const w = weeklySeries(
+      [
+        gift({ paidAt: at("2026-11-08T21:59:00Z"), amountCents: 100 }), // Sun 8 Nov 23:59: previous week
+        gift({ paidAt: at("2026-11-08T22:00:00Z"), amountCents: 200 }), // Mon 9 Nov 00:00: this week
+        gift({ paidAt: at("2026-11-11T08:00:00Z"), amountCents: 300 }),
+        gift({ donorId: "d9", status: "PENDING", paidAt: null, amountCents: 999 }),
+      ],
+      NOW,
+      3,
+    );
+    expect(w).toEqual([
+      { weekStart: "2026-10-26", raisedCents: 0, donationCount: 0, current: false },
+      { weekStart: "2026-11-02", raisedCents: 100, donationCount: 1, current: false },
+      { weekStart: "2026-11-09", raisedCents: 500, donationCount: 2, current: true },
+    ]);
+  });
+
+  it("defaults to 8 weeks", () => {
+    expect(weeklySeries([], NOW)).toHaveLength(8);
   });
 });

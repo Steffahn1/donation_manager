@@ -151,3 +151,59 @@ export function groupByCampaign<T extends { campaignId: string }>(rows: T[]): Ma
   }
   return map;
 }
+
+/**
+ * Daily raised + running total for the long-term chart, from `since` (or the first gift, if earlier)
+ * up to today, or up to the campaign's last day (`untilDay`, YYYY-MM-DD) once that has passed, so a
+ * closed campaign's chart doesn't grow a tail of empty days. Paid gifts only.
+ *
+ * Every paid gift is included, so the final running total always equals computeMetrics().raisedCents
+ * (the "Raised" figure on the same page). A gift confirmed just before the end but paid after midnight
+ * (the Stripe payment page stays open for a while) is counted on the campaign's last day.
+ */
+export function longTermSeries(
+  rows: MetricDonation[],
+  since: Date | null,
+  now: Date,
+  untilDay?: string,
+): { date: string; raisedCents: number; cumulativeCents: number }[] {
+  // Last moment of untilDay in Johannesburg: next day 00:00 SAST minus 1 ms.
+  const untilEnd = untilDay ? new Date(Date.parse(`${untilDay}T00:00:00Z`) + DAY_MS - SAST_OFFSET_MS - 1) : null;
+  const end = untilEnd && untilEnd < now ? untilEnd : now;
+  // Late payments (after the last day) are moved onto the last moment of the last day, not dropped.
+  const paid = paidOnly(rows)
+    .filter((r) => r.paidAt <= now)
+    .map((r) => (r.paidAt > end ? { ...r, paidAt: end } : r));
+  const firstPaid = paid.reduce<Date | null>((min, r) => (!min || r.paidAt < min ? r.paidAt : min), null);
+  // Start at the campaign start, or the first gift if that is earlier (e.g. seeded or back-dated data).
+  const startAt = since && firstPaid ? (since < firstPaid ? since : firstPaid) : (since ?? firstPaid ?? end);
+  const days = Math.max(1, Math.round((Date.parse(sastDate(end)) - Date.parse(sastDate(startAt))) / DAY_MS) + 1);
+  return dailySeries(paid, end, days);
+}
+
+export type WeekTotal = {
+  /** Monday of the week, YYYY-MM-DD (Johannesburg). */
+  weekStart: string;
+  raisedCents: number;
+  donationCount: number;
+  /** The week containing `now`, still in progress. */
+  current: boolean;
+};
+
+/** Totals per Monday–Sunday week (Johannesburg), oldest first, for the week-by-week chart. Paid gifts only. */
+export function weeklySeries(rows: MetricDonation[], now: Date, weeks = 8): WeekTotal[] {
+  const paid = paidOnly(rows).filter((r) => r.paidAt <= now);
+  const thisWeek = sastWeekStart(now).getTime();
+  const result: WeekTotal[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const start = thisWeek - i * 7 * DAY_MS;
+    const end = start + 7 * DAY_MS;
+    const inWeek = paid.filter((r) => r.paidAt.getTime() >= start && r.paidAt.getTime() < end);
+    result.push({
+      weekStart: sastDate(new Date(start)),
+      ...totals(inWeek),
+      current: i === 0,
+    });
+  }
+  return result;
+}

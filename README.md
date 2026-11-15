@@ -1,9 +1,18 @@
 # Donation Manager
 
 Donation management for a small charity: public campaign pages, once-off card donations through
-Stripe (test mode), and staff accounts (super admin and campaign managers). Currency is ZAR only.
+Stripe (test mode), donor accounts with receipts, and staff dashboards with funder reporting.
+Currency is ZAR only. Built for the "Payments and people" brief; the brief's **funder** is a donor
+here. The full plan is in [docs/PLAN.md](docs/PLAN.md) and progress in [docs/PROGRESS.md](docs/PROGRESS.md).
 
-> Work in progress. The full write-up (decisions, privacy, limitations, future work) comes on day 5.
+## Who uses it
+
+| Role | Can |
+| --- | --- |
+| Visitor / guest donor | Browse campaigns, donate without an account, get a receipt link by email |
+| Donor (account) | See their own donations, impact and campaign progress, reveal their name on an anonymous gift, download their donations |
+| Campaign manager | See dashboards for **their own** campaigns only: progress, donors (anonymous ones masked), failed attempts, charts, CSV export |
+| Super admin | Everything a manager sees for **all** campaigns, plus create/edit campaigns and manager accounts |
 
 ## Running locally
 
@@ -27,7 +36,7 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 Demo logins (from the seed): `admin@charity.local` / `ChangeMe123!`,
 `thandi@charity.local` / `Manager123!`, `donor@example.com` / `Donor123!`.
 
-Checks: `npm test`, `npm run typecheck`, `npm run lint`.
+Checks: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
 
 ## How a donation is paid
 
@@ -96,6 +105,49 @@ this browser tab's `sessionStorage`.
 Signup and receipt emails are sent after the response (Next.js `after()`). When self-hosting, stop the
 server gracefully (SIGTERM) so pending emails still go out.
 
+## Dashboards and reporting
+
+- **Numbers** (`src/lib/metrics.ts`): gross raised (before payment-provider fees), donations, unique
+  and repeat donors, this week vs last week, and new vs returning donors ("returning" = gave to the
+  same campaign before this week). Only paid donations count. Days and weeks are Johannesburg time.
+- **Charts**: a long-term chart (money per day and the running total since the start) and a
+  week-by-week comparison (last 8 Monday–Sunday weeks, this week marked). On the overview and on
+  each campaign page. Closed campaigns' charts end on their last day (a payment completed
+  after midnight counts on that day, so the running total always matches "Raised"). The
+  browser only receives dates, amounts and donation counts (no donor details).
+- **CSV exports** with a date range (Johannesburg days, both included; default the last 12 months),
+  **paid donations only**:
+  - staff: `/api/export/donations.csv?from=…&to=…[&campaign=…]`, scoped like the dashboards; a
+    manager asking for another manager's campaign gets an empty file
+  - donors: `/api/export/my-donations.csv?from=…&to=…`, their own donations only
+  - anonymous donors appear as "Anonymous" with no email; cells that could run as spreadsheet
+    formulas are neutralised; 401 when logged out, 403 for the wrong role
+
+## Key decisions
+
+- **The webhook is the only source of "paid".** Pages never mark a donation paid; every status change
+  is conditional and replayed events are ignored, so totals can't double-count.
+- **Money is integer cents** everywhere; input accepts the South African decimal comma.
+- **Duplicate payments** are stopped at four levels: the confirm step, one payment page per confirm
+  screen (Stripe idempotency key), newest-page-wins per browser, and idempotent webhooks.
+- **Anonymity is per gift and enforced on the server.** Staff pages and CSVs only ever receive
+  masked rows, and staff donor counts treat each anonymous gift as its own donor, so the numbers
+  can't reveal who gave it. Revealing a name is one-way.
+- **Accounts can't be pre-hijacked**: no password until the inbox owner confirms; confirming ends
+  other sessions; signup and login take the same time whether or not an account exists.
+- **Pure, tested core logic** (metrics, checkout decisions, webhook processing, verification, exports)
+  with the database and Stripe injected; the pages and routes are thin wrappers.
+
+## Privacy
+
+- Minimal data: name, email, amount, and the per-gift anonymity choice. Card details never touch
+  the app (Stripe Checkout).
+- Staff never see an anonymous donor's identity, in pages or exports. Public pages show no donor
+  details at all.
+- Tokens (sessions, verification links, receipt links) are stored only as SHA-256 hashes; pages with
+  tokens in the URL are `noindex` and `no-referrer`.
+- Logs contain ids and error codes only, never names, emails or error messages from Stripe.
+
 ### Privacy note: the browser cookie
 
 To close a donor's own older payment pages, the app sets a random, httpOnly cookie (`dm_browser`)
@@ -106,3 +158,23 @@ open: the webhook clears it when a payment completes or a page expires, and anyt
 
 Test cards: `4242 4242 4242 4242` (succeeds), `4000 0000 0000 0002` (declined),
 `4000 0000 0000 9995` (insufficient funds). Any future expiry date and any CVC.
+
+## Limitations
+
+- The payment flow was tested end to end with real Stripe test-mode webhooks (see docs/PROGRESS.md),
+  but the dashboards and charts have not yet been checked visually in a browser.
+- No rate limiting (signup emails, login attempts).
+- Anyone with database access can read donor details; there is no column encryption.
+- Tokens in URLs (`/verify-email?token=…`, `/receipt/<token>`) can appear in hosting access logs.
+- Receipt emails are best effort: a failed email is not retried, and its link is lost.
+- Blocked staff pages return HTTP 200 (showing "not found" or redirecting in the browser) because
+  the page starts streaming before the access check; no data is shown.
+- Dashboard numbers are computed in memory from paid donations: fine for a small charity, but would
+  move to SQL aggregation at large volumes.
+- "Newest payment page wins" works per browser; two different browsers can each have an open page.
+
+## Future work
+
+Recurring donations, campaign image upload, a retry queue for emails, rate limiting, column
+encryption for donor details, 404/redirect status codes for blocked pages, deleting expired
+sessions, and database-level integration tests for the query filters.
