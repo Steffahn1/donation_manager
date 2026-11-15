@@ -48,13 +48,16 @@ export async function handleSignup(email: string): Promise<void> {
  */
 async function issueVerification(user: { id: string; email: string }): Promise<boolean> {
   const token = generateToken();
-  await db.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${user.id} FOR UPDATE`;
+  const issued = await db.$transaction(async (tx) => {
+    const locked = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "User" WHERE id = ${user.id} FOR UPDATE`;
+    if (locked.length !== 1) return false; // deleted in the meantime (e.g. replaced by "Add manager")
     await tx.emailVerificationToken.deleteMany({ where: { userId: user.id } });
     await tx.emailVerificationToken.create({
       data: { id: hashToken(token), userId: user.id, expiresAt: verificationExpiry(new Date()) },
     });
+    return true;
   });
+  if (!issued) return false;
   const verifyUrl = `${appUrl()}/verify-email?token=${token}`;
   return sendEmail(user.email, verificationEmail({ verifyUrl, validHours: VERIFICATION_VALID_HOURS }), "verification");
 }
@@ -87,6 +90,8 @@ export async function confirmVerification(
             select: { expiresAt: true, user: { select: { id: true, email: true, role: true, emailVerifiedAt: true } } },
           }),
         deleteToken: async (id) => void (await t.emailVerificationToken.deleteMany({ where: { id } })),
+        lockUser: async (userId) =>
+          (await t.$queryRaw<{ id: string }[]>`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`).length === 1,
         consumeToken: async (id) => (await t.emailVerificationToken.deleteMany({ where: { id } })).count,
         deleteUserTokens: async (userId) => void (await t.emailVerificationToken.deleteMany({ where: { userId } })),
         deleteUserSessions: async (userId) => void (await t.session.deleteMany({ where: { userId } })),

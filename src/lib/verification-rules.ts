@@ -52,6 +52,12 @@ export type ConfirmTx = {
     user: { id: string; email: string; role: "SUPER_ADMIN" | "CAMPAIGN_MANAGER" | "DONOR"; emailVerifiedAt: Date | null };
   } | null>;
   deleteToken(tokenHash: string): Promise<void>;
+  /**
+   * Locks the account row (SELECT ... FOR UPDATE) and returns whether it still exists. Taken BEFORE the
+   * token, in the same order as every other writer (deleting an account locks it, then its tokens via
+   * the cascade), so a confirm and an "Add manager"/cleanup for the same account can't deadlock.
+   */
+  lockUser(userId: string): Promise<boolean>;
   /** Deletes the token and returns how many rows were deleted (1 = this request won; 0 = already used). */
   consumeToken(tokenHash: string): Promise<number>;
   deleteUserTokens(userId: string): Promise<void>;
@@ -105,7 +111,8 @@ export async function confirmAccount(
   const { user } = token;
   if (user.role !== "DONOR" || user.emailVerifiedAt) return { ok: false, reason: "invalid" };
 
-  // Use the link up FIRST, as a conditional write: of two simultaneous submissions with the same link,
+  if (!(await tx.lockUser(user.id))) return { ok: false, reason: "invalid" }; // account was just deleted
+  // Use the link up first, as a conditional write: of two simultaneous submissions with the same link,
   // the second waits on the first's delete and then deletes nothing, so it stops here.
   if ((await tx.consumeToken(tokenHash)) !== 1) return { ok: false, reason: "invalid" };
   if ((await tx.setAccount(user.id, { ...account, emailVerifiedAt: now })) !== 1) return { ok: false, reason: "invalid" };
