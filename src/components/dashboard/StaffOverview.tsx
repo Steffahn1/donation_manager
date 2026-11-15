@@ -1,10 +1,13 @@
 import Link from "next/link";
 import type { CurrentUser } from "@/lib/auth";
-import { computeMetrics, groupByCampaign } from "@/lib/metrics";
+import { computeMetrics, groupByCampaign, longTermSeries, weeklySeries } from "@/lib/metrics";
 import { failedCounts, listStaffCampaigns, metricDonations } from "@/lib/queries/staff";
 import { listManagers } from "@/lib/queries/admin";
 import { formatZar } from "@/lib/money";
 import { StatCard } from "./StatCard";
+import { ExportForm } from "./ExportForm";
+import { LongTermChart } from "@/components/charts/LongTermChart";
+import { WeeklyChart } from "@/components/charts/WeeklyChart";
 
 const STATUS_STYLE = {
   ACTIVE: "bg-emerald-100 text-emerald-800",
@@ -51,6 +54,24 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
           hint={`${weekChange >= 0 ? "+" : "−"}${formatZar(Math.abs(weekChange))} vs last week (${formatZar(overall.lastWeek.raisedCents)})`}
         />
         <StatCard label="Failed attempts" value={failedTotal} hint="Declined payments, not counted in totals" />
+      </section>
+
+      {rows.length > 0 && (
+        <section className="grid gap-6 lg:grid-cols-2" aria-label="Pacing">
+          <div className="card space-y-2">
+            <h2 className="text-lg font-semibold">All {isAdmin ? "" : "your "}campaigns since the start</h2>
+            <LongTermChart data={longTermSeries(rows, null, now)} />
+          </div>
+          <div className="card space-y-2">
+            <h2 className="text-lg font-semibold">Week by week</h2>
+            <WeeklyChart data={weeklySeries(rows, now)} />
+          </div>
+        </section>
+      )}
+
+      <section className="card space-y-3">
+        <h2 className="text-lg font-semibold">Export donations</h2>
+        <ExportForm action="/api/export/donations.csv" />
       </section>
 
       <section className="space-y-3">

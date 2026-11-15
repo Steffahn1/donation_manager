@@ -90,12 +90,39 @@
 - [x] 160 tests; typecheck and lint pass. Not re-run live (dev server was stopped); the same lock query
       already ran live in signup
 
-## Day 5: Reporting and polish
-- [ ] CSV export with date range for each role (donor counts must come from `computeMetrics`, never
-      a separate count by donorId, or anonymous gifts become linkable again)
-- [ ] Pacing chart (Recharts), using `Metrics.daily` from Day 3
-- [ ] More tests (role guards)
-- [ ] README: decisions, privacy, limitations, future work
+## Day 5: Reporting and polish (branch `day-5-reporting`, pushed for a pull request)
+- [x] CSV exports with a date range, paid donations only: staff (`/api/export/donations.csv`, scoped
+      with `campaignScopeFor`, anonymous donors masked, empty file for another manager's campaign) and
+      donors (`/api/export/my-donations.csv`, own donations). Formula-injection safe, BOM + CRLF,
+      401/403 via `getUserWithRole`, which now treats "no roles" as "any logged-in user"
+- [x] Charts (Recharts): long-term (per day + running total since the start) and week by week (last
+      8 weeks), on the overview and each campaign page; only dates, amounts and donation counts
+      reach the browser; a closed campaign's chart ends on its last day
+- [x] Tests: CSV, date ranges, exports per role (filter applied to in-memory rows), access rules,
+      long-term and weekly series
+- [x] Checked against the seeded database: 401/403/400 responses; admin CSV = all 119 paid donations
+      (R62 750), manager CSV = only their 72, other manager's campaign = empty, donor CSV = own 4;
+      all 21 anonymous rows masked; chart data matches totals and contains no donor details
+- [x] README write-up: roles, reporting, key decisions, privacy, limitations, future work
+- [x] Real Stripe end-to-end test (2026-11-15, Stripe CLI `stripe listen`, test mode sandbox, paid in
+      a real browser):
+      - card 4242: donation SUCCEEDED only via `checkout.session.completed`; campaign total +R100;
+        one receipt email in Mailpit; the private receipt link shows the right details
+      - `stripe events resend` of that event: logged as "duplicate", no double count, no second receipt
+      - card 4000…0002: `payment_intent.payment_failed` set FAILED with "Your card was declined.";
+        not counted; shown as a failed attempt
+      - back to the form after the decline and confirming again: no second donation, no second
+        payment page (the open page was reused)
+      - "Try again": Stripe page expired (checked at Stripe); donation stayed FAILED; browser key cleared
+- [ ] Not tested by hand: a deliberate double-click on "Confirm and pay" (covered by unit tests)
+- [ ] Click-through in a browser of the dashboards, including how the charts look
+- Note: the two Stripe test donations used a real email address. Both, and that donor record, were
+  deleted from the dev database and Mailpit afterwards (the Stripe sandbox keeps its own test data:
+  Dashboard → Developers → "Delete all test data").
+- [x] Day 5 review fixes: README/PLAN accuracy, chart tooltips use formatZar, strict export-test
+      helper, missing "from" counts back from "to", closed campaigns' charts end on their last day
+      (a payment completed after midnight counts on that last day, so the chart's running total
+      always equals "Raised"), clearer `getUserWithRole`, end-of-day boundary tests (202 tests total)
 
 ## Known issues / notes
 - No rate limit on signup: someone could trigger many verification emails to one address.
@@ -117,4 +144,4 @@
   payment pages for the same campaign. Both would be deliberate confirm steps.
 - Dashboard metrics load successful donations into memory (fine for a small charity; move to SQL
   aggregation if volumes grow a lot).
-- `getUserWithRole()` with no roles rejects everyone, unlike `requireRole()` (review #12, fix by Day 5).
+- ~~`getUserWithRole()` with no roles rejects everyone~~: fixed on Day 5 (shared `hasRole` rule).
