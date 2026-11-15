@@ -58,10 +58,17 @@ describe("confirmAccount (the confirm page)", () => {
   type User = { id: string; email: string; role: "SUPER_ADMIN" | "CAMPAIGN_MANAGER" | "DONOR"; emailVerifiedAt: Date | null; name: string; passwordHash: string | null };
 
   /** In-memory accounts, tokens, sessions and donors behind the ConfirmTx interface. */
-  function world(opts: { user?: Partial<User>; tokenExpiresAt?: Date; donor?: { id: string; userId: string | null } | null }) {
+  function world(opts: {
+    user?: Partial<User>;
+    tokenExpiresAt?: Date;
+    donor?: { id: string; userId: string | null } | null;
+    userDeleted?: boolean;
+  }) {
     const user: User = { id: "u1", email: "victim@example.test", role: "DONOR", emailVerifiedAt: null, name: "", passwordHash: null, ...opts.user };
     const tokens = new Map([["hash_ok", { userId: user.id, expiresAt: opts.tokenExpiresAt ?? verificationExpiry(NOW) }], ["hash_other", { userId: user.id, expiresAt: verificationExpiry(NOW) }]]);
     const sessions = new Set(["attacker_session", "old_session"]); // all belong to u1
+    const calls: string[] = [];
+    const userDeleted = opts.userDeleted ?? false;
     const donors = new Map<string, { id: string; email: string; name: string; userId: string | null }>();
     if (opts.donor !== null) {
       const d = opts.donor ?? { id: "donor_1", userId: null };
@@ -73,7 +80,14 @@ describe("confirmAccount (the confirm page)", () => {
         return t ? { expiresAt: t.expiresAt, user: { id: user.id, email: user.email, role: user.role, emailVerifiedAt: user.emailVerifiedAt } } : null;
       },
       deleteToken: async (h: string) => void tokens.delete(h),
-      consumeToken: async (h: string) => (tokens.delete(h) ? 1 : 0),
+      lockUser: async () => {
+        calls.push("lockUser");
+        return !userDeleted;
+      },
+      consumeToken: async (h: string) => {
+        calls.push("consumeToken");
+        return tokens.delete(h) ? 1 : 0;
+      },
       deleteUserTokens: async () => tokens.clear(),
       deleteUserSessions: async () => sessions.clear(),
       setAccount: async (_id: string, data: { name: string; passwordHash: string; emailVerifiedAt: Date }) => {
@@ -88,7 +102,7 @@ describe("confirmAccount (the confirm page)", () => {
         if (d && d.userId === null) d.userId = userId;
       },
     };
-    return { tx, user, tokens, sessions, donors };
+    return { tx, user, tokens, sessions, donors, calls };
   }
   const account = { name: "Real Owner", passwordHash: "hash(owner-password)" };
 
@@ -160,6 +174,20 @@ describe("confirmAccount (the confirm page)", () => {
     expect(await confirmAccount(w.tx, "hash_ok", account, NOW)).toEqual({ ok: false, reason: "invalid" });
     expect(w.user.name).toBe("");
     expect(w.sessions.size).toBe(2);
+  });
+
+  it("locks the account before using up the link (same order as deleting an account: no deadlock)", async () => {
+    const w = world({});
+    await confirmAccount(w.tx, "hash_ok", account, NOW);
+    expect(w.calls).toEqual(["lockUser", "consumeToken"]);
+  });
+
+  it("stops without writing anything if the account was deleted meanwhile (e.g. replaced by 'Add manager')", async () => {
+    const w = world({ userDeleted: true });
+    expect(await confirmAccount(w.tx, "hash_ok", account, NOW)).toEqual({ ok: false, reason: "invalid" });
+    expect(w.calls).toEqual(["lockUser"]);
+    expect(w.tokens.has("hash_ok")).toBe(true);
+    expect(w.user.passwordHash).toBeNull();
   });
 
   it("rejects an expired link without changing the account, and removes the link", async () => {

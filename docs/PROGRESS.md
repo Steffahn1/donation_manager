@@ -55,7 +55,7 @@
       with no data; anonymous gifts show as "Anonymous" and no anonymous donor's email or id
       appears in the page or its RSC payload
 
-## Day 4: Donors (branch `day-4-donors`, pushed for a pull request)
+## Day 4: Donors (merged in pull request #3)
 - [x] Donor dashboard: history (attempts that never reached Stripe hidden), campaign progress, total
       given, impact per campaign, "Show my name" on anonymous gifts (one-way, with a confirmation; a
       named gift can never be made anonymous afterwards)
@@ -81,6 +81,14 @@
       reveal (only own anonymous gifts, one-way), receipt sent once and page contents. Test data removed.
 - [ ] Not yet clicked through in a browser; the receipt has not been triggered by a real Stripe
       webhook (no Stripe CLI on this machine)
+
+## Day 4 review fixes (branch `day-4-review-fixes`)
+- [x] Confirming locks the account before using up the link, the same order as deleting an account
+      ("Add manager", cleanup), so the two can't deadlock; a signup for an account deleted meanwhile is
+      skipped quietly
+- [x] Login timing test now proves an account without a password is compared against the cost-12 dummy
+- [x] 160 tests; typecheck and lint pass. Not re-run live (dev server was stopped); the same lock query
+      already ran live in signup
 
 ## Day 5: Reporting and polish
 - [ ] CSV export with date range for each role (donor counts must come from `computeMetrics`, never

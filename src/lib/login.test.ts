@@ -38,15 +38,21 @@ describe("canLogIn", () => {
     expect(await canLogIn(donor({ emailVerifiedAt: null }), "right-password", realCompare)).toBe(false);
   });
 
-  it("does the same slow check whether or not the account exists (no timing difference)", async () => {
-    for (const user of [null, donor({ passwordHash: null, emailVerifiedAt: null }), donor()]) {
-      const c = counting();
-      await canLogIn(user, "guess", c.compare);
-      expect(c.calls).toHaveLength(1);
-      expect(c.calls[0]).toMatch(/^\$2[aby]\$12\$|^\$2[aby]\$04\$/);
-    }
-    const missing = counting();
-    await canLogIn(null, "guess", missing.compare);
-    expect(missing.calls[0]).toMatch(/^\$2b\$12\$/); // the dummy uses the same cost as real passwords
+  it("does exactly one slow check whether or not the account exists (no timing difference)", async () => {
+    const dummy = counting();
+    await canLogIn(null, "guess", dummy.compare);
+    expect(dummy.calls).toHaveLength(1);
+    const dummyHash = dummy.calls[0];
+    expect(dummyHash).toMatch(/^\$2b\$12\$/); // same cost as real passwords
+
+    // No account, or an account without a password: compared against that same cost-12 dummy hash.
+    const noPassword = counting();
+    await canLogIn(donor({ passwordHash: null, emailVerifiedAt: null }), "guess", noPassword.compare);
+    expect(noPassword.calls).toEqual([dummyHash]);
+
+    // A real account: compared once against its own hash.
+    const real = counting();
+    await canLogIn(donor(), "guess", real.compare);
+    expect(real.calls).toEqual([HASH]);
   });
 });
