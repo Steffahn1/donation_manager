@@ -33,7 +33,9 @@ enum DonationStatus {
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
-  passwordHash    String
+  /// Null until a donor confirms their email: the password is only set on the confirm page, so nobody
+  /// can hold a working password (or session) for an email address they don't control.
+  passwordHash    String?
   role            Role
   name            String
   emailVerifiedAt DateTime?

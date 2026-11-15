@@ -81,16 +81,35 @@ into polish (see Build order).
 - Each donation stores the **name typed for that gift** (`donorName`). Staff see that name, not the
   shared `Donor.name` (one email can be shared, e.g. by a household). The confirm screen shows exactly
   what staff will see.
-- Guests get a receipt email with a private status link (random token). Only a **hash** of the token is
-  stored (`receiptTokenHash`); the raw token exists only in the email.
+- Every donor gets a receipt email with a private status link (random token) once the webhook marks the
+  donation SUCCEEDED. Only a **hash** of the token is stored (`receiptTokenHash`); the raw token exists
+  only in the email. Sending is **best effort**: one attempt after the payment is recorded, failures are
+  logged (without donor details) and never affect the payment. A retry queue is future work.
+- The receipt page (`/receipt/[token]`) shows that gift's status, amount, date and campaign progress,
+  plus the name given for the gift and whether it is anonymous. Only the holder of the link sees it.
 - Donor signup requires **email verification** before guest donations with that email are linked to the
-  account.
+  account. Signup asks for the email address only; the account has **no name and no password until the
+  email is confirmed**, and the confirm page is where the owner of the inbox chooses them. Confirming
+  ends every existing session for the account. This prevents "pre-hijacking" (someone signing up with
+  another person's email and keeping access after the owner confirms). Signup responds identically and
+  immediately for every address; the lookup and email happen after the response (`after()`), so the
+  response and its timing don't reveal whether an account exists. The verification email contains no
+  text typed by the person signing up. A link is used up atomically (a conditional delete), so two
+  simultaneous submissions can't both confirm. Login does the same slow password check whether or not
+  the account exists, and never lets in an account without a password or an unconfirmed donor.
+- Unconfirmed signups are deleted once their link has expired (24 h), and "Add manager" may replace an
+  unconfirmed, password-less donor signup with the same email. Neither can lose data: such an account
+  has no password, sessions or donations.
+- Known limitation: links with tokens (`/verify-email?token=…`, `/receipt/<token>`) can appear in web
+  server or hosting access logs, which record full URLs. Restrict or redact those logs in production.
 - Minimal data: name, email and amount. No card data is ever stored (Stripe holds it).
 - **Anonymous flag per donation:**
   - Full details are always stored.
   - **No staff role (CM or super admin) ever sees the identity.** It is masked server-side to
     "Anonymous" in pages *and* CSVs (`toStaffDonation` in `src/lib/privacy.ts`). Only the donor sees it.
-  - A logged-in donor can un-anonymise a donation.
+  - A logged-in donor can **reveal** one of their own anonymous gifts. This is one-way and permanent:
+    a revealed gift can't be made anonymous again, and a named gift can never be made anonymous
+    afterwards (staff may already have seen the name). The donor confirms before revealing.
   - Staff donor stats never link gifts: each anonymous gift counts as its own one-off donor in unique,
     repeat and new vs returning counts (on dashboards and in CSVs). Counting them under the real donor
     would let staff work out who gave anonymously (e.g. "1 unique donor" next to "Jane R100" and
@@ -117,7 +136,7 @@ into polish (see Build order).
   - donation history with status
   - progress of each campaign they gave to
   - total given and impact ("you fed 3 families")
-  - anonymity toggle
+  - "Reveal my name" on each of their anonymous gifts (one-way, with a confirmation)
 - **CSV export with a date range** for all three roles, limited to what each role can see.
 - Staff and donor views must leave out `PENDING` donations that never got a payment page (no session id):
   they are not real payments.
@@ -179,7 +198,7 @@ Dev only: Mailpit (in Docker) via nodemailer, for receipts and verification link
    duplicate handling, cancel/try-again, amount parsing, unit tests.
 3. **Day 3 (done):** CM dashboard (metrics, masking, donor list, failed attempts) and super admin
    dashboard at `/dashboard` and `/dashboard/campaigns/[id]`.
-4. **Day 4:** donor dashboard with impact and anonymity toggle; signup verification and guest linking;
+4. **Day 4:** donor dashboard with impact and "reveal my name" for anonymous gifts; signup verification and guest linking;
    receipt email and private link (hashed token).
 5. **Day 5:** CSV exports, pacing chart, more tests (metrics, role guards), README (decisions, privacy,
    limitations, future work) and polish. Also: make `getUserWithRole()` with no roles behave like

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { StaffOverview } from "@/components/dashboard/StaffOverview";
+import { DonorDashboard } from "@/components/dashboard/DonorDashboard";
 
 export const metadata = { title: "Dashboard · Donation Manager" };
 
@@ -12,12 +12,5 @@ export default async function DashboardPage() {
     return <StaffOverview user={user} />;
   }
 
-  // Day 4: donation history, impact and the anonymity toggle.
-  return (
-    <div className="card mx-auto max-w-lg space-y-3">
-      <h1 className="text-2xl font-bold">Your donations</h1>
-      <p className="text-slate-600">Your donation history will appear here soon.</p>
-      <Link href="/campaigns" className="btn">See campaigns</Link>
-    </div>
-  );
+  return <DonorDashboard user={user} />;
 }
