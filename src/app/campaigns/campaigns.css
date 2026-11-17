@@ -10,6 +10,7 @@
   --navy-dark: #1e305c;
   --coral: #e86044;
   --coral-dark: #c94b31;
+  --coral-text: #b3381f;
   --yellow: #f8ba17;
   --seafoam: #c4dddd;
   --cream: #f3f1ea;
@@ -101,8 +102,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  min-height: 44px;
   padding: 0.75rem 2.25rem 0.65rem;
-  font-size: 1.15rem;
+  /* 1.2rem bold counts as large text, so white on coral (3.4:1) passes. */
+  font-size: 1.2rem;
   clip-path: var(--chamfer);
   transition:
     background-color 0.2s ease,
@@ -133,11 +136,21 @@
   color: var(--navy);
 }
 
+/*
+ * Focus ring: navy on light backgrounds, yellow on the navy hero. clip-path would also cut off the
+ * outline, so chamfered buttons drop the clip while focused.
+ */
 .cx-btn:focus-visible,
 .cx-btnOutline:focus-visible,
 .cx-link:focus-visible {
-  outline: 3px solid var(--yellow);
+  clip-path: none;
+  outline: 3px solid var(--navy);
   outline-offset: 3px;
+}
+
+.cx-hero .cx-btn:focus-visible,
+.cx-hero .cx-btnOutline:focus-visible {
+  outline-color: var(--yellow);
 }
 
 /* ---------- Wavy dividers ---------- */
@@ -178,7 +191,8 @@
 }
 
 .cx-statValue {
-  color: var(--coral);
+  /* --coral on seafoam is only 2.4:1; the darker coral is 4.2:1 (fine for these large numbers). */
+  color: var(--coral-text);
   font-size: clamp(2.5rem, 5vw, 3.75rem);
 }
 
@@ -379,7 +393,14 @@
 
 .cx-cardActions .cx-btn {
   padding: 0.6rem 1.5rem 0.5rem;
+  /* Smaller than large text, so use the darker coral: white on it is 4.6:1. */
   font-size: 1.05rem;
+  background: var(--coral-dark);
+}
+
+.cx-cardActions .cx-btn:hover,
+.cx-cardActions .cx-btn:focus-visible {
+  background: #a83a22;
 }
 
 .cx-link {
