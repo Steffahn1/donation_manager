@@ -10,6 +10,11 @@ body {
   color: #0f172a;
 }
 
+/* Full-width sections (the /campaigns trial) are 100vw wide, which includes the scrollbar: no sideways scroll. */
+body:has([data-full-bleed]) {
+  overflow-x: clip;
+}
+
 /* Small shared building blocks */
 @layer components {
   .card {
