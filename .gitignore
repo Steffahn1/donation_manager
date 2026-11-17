@@ -47,6 +47,6 @@ next-env.d.ts
 
 # AI assistant skills installed locally (third-party docs, not project code)
 .agents/
-.claude/skills/
+.claude/skills/prisma-*
 .windsurf/
 skills-lock.json
