@@ -15,15 +15,15 @@ const weekLabel = (iso: string) =>
 export function WeeklyChart({ data }: { data: WeekPoint[] }) {
   return (
     <figure className="space-y-2">
-      <figcaption className="text-sm text-slate-600">
+      <figcaption className="text-muted text-sm">
         Raised per week (Monday to Sunday), gross. The darker bar is this week so far.
       </figcaption>
       <div className="h-64 w-full" role="img" aria-label="Chart comparing money raised week by week">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-            <XAxis dataKey="weekStart" tickFormatter={weekLabel} tick={{ fontSize: 12, fill: "#475569" }} />
-            <YAxis tickFormatter={randAxis} width={80} tick={{ fontSize: 12, fill: "#475569" }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e6e7e8" vertical={false} />
+            <XAxis dataKey="weekStart" tickFormatter={weekLabel} tick={{ fontSize: 12, fill: "#5b6474" }} />
+            <YAxis tickFormatter={randAxis} width={80} tick={{ fontSize: 12, fill: "#5b6474" }} />
             <Tooltip
               labelFormatter={(label) => weekLabel(String(label))}
               formatter={(value, _name, item) => [
@@ -33,7 +33,7 @@ export function WeeklyChart({ data }: { data: WeekPoint[] }) {
             />
             <Bar dataKey="raisedCents" radius={[3, 3, 0, 0]}>
               {data.map((w) => (
-                <Cell key={w.weekStart} fill={w.current ? "#047857" : "#6ee7b7"} />
+                <Cell key={w.weekStart} fill={w.current ? "#274078" : "#e86044"} />
               ))}
             </Bar>
           </BarChart>

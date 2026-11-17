@@ -40,24 +40,24 @@ export default async function StaffCampaignPage({ params }: PageProps<"/dashboar
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <Link href="/dashboard" className="text-sm text-emerald-700 underline">← Dashboard</Link>
+        <Link href="/dashboard" className="link text-sm">← Dashboard</Link>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="text-2xl font-bold">{campaign.name}</h1>
+          <h1 className="page-title">{campaign.name}</h1>
           <div className="flex gap-3 text-sm">
-            <Link href={`/campaigns/${campaign.slug}`} className="text-emerald-700 underline">Public page</Link>
+            <Link href={`/campaigns/${campaign.slug}`} className="link">Public page</Link>
             {user.role === "SUPER_ADMIN" && (
-              <Link href={`/admin/campaigns/${campaign.id}`} className="text-emerald-700 underline">Edit</Link>
+              <Link href={`/admin/campaigns/${campaign.id}`} className="link">Edit</Link>
             )}
           </div>
         </div>
-        <p className="text-sm text-slate-600">
+        <p className="text-muted text-sm">
           {campaign.status} · {dateIso(campaign.startDate)} → {dateIso(campaign.endDate)} · managed by {campaign.manager.name}
         </p>
       </div>
 
       <section className="card space-y-2">
-        <ProgressBar raisedCents={m.raisedCents} targetCents={campaign.targetCents} />
-        <p className="text-xs text-slate-500">
+        <ProgressBar raisedCents={m.raisedCents} targetCents={campaign.targetCents} label={`${campaign.name}: raised towards target`} />
+        <p className="text-muted text-sm">
           Gross, before payment-provider fees.
           {units > 0 && ` That's ${units} × ${campaign.impactLabel}.`}
         </p>
@@ -76,37 +76,37 @@ export default async function StaffCampaignPage({ params }: PageProps<"/dashboar
           hint={`${m.thisWeek.donationCount} donations · ${weekChange >= 0 ? "+" : "−"}${formatZar(Math.abs(weekChange))} vs last week`}
         />
         <StatCard
-          label="Donors this week"
-          value={`${m.thisWeek.newDonors} new · ${m.thisWeek.returningDonors} returning`}
+          label="Donors this week: new / returning"
+          value={`${m.thisWeek.newDonors} / ${m.thisWeek.returningDonors}`}
           hint="Returning = gave to this campaign before this week (anonymous gifts always count as new)"
         />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2" aria-label="Pacing">
         <div className="card space-y-2">
-          <h2 className="text-lg font-semibold">Since the start</h2>
+          <h2 className="section-title">Since the start</h2>
           <LongTermChart data={longTerm} />
         </div>
         <div className="card space-y-2">
-          <h2 className="text-lg font-semibold">Week by week</h2>
+          <h2 className="section-title">Week by week</h2>
           <WeeklyChart data={weekly} />
         </div>
       </section>
 
       <section className="card space-y-3">
-        <h2 className="text-lg font-semibold">Export this campaign&apos;s donations</h2>
+        <h2 className="section-title">Export this campaign&apos;s donations</h2>
         <ExportForm action="/api/export/donations.csv" campaignId={campaign.id} />
       </section>
 
       <section className="card space-y-0 p-0">
-        <h2 className="px-5 pt-4 text-lg font-semibold">Donors</h2>
-        <p className="px-5 pb-2 text-xs text-slate-500">Anonymous donors are shown as &ldquo;Anonymous&rdquo;.</p>
+        <h2 className="section-title px-5 pt-4">Donors</h2>
+        <p className="px-5 pb-2 text-muted text-sm">Anonymous donors are shown as &ldquo;Anonymous&rdquo;.</p>
         <DonationTable rows={donors.rows} total={donors.total} kind="donors" />
       </section>
 
       <section className="card space-y-0 p-0">
-        <h2 className="px-5 pt-4 text-lg font-semibold">Failed payment attempts</h2>
-        <p className="px-5 pb-2 text-xs text-slate-500">Declined card payments. They are never counted in any total.</p>
+        <h2 className="section-title px-5 pt-4">Failed payment attempts</h2>
+        <p className="px-5 pb-2 text-muted text-sm">Declined card payments. They are never counted in any total.</p>
         <DonationTable rows={failures.rows} total={failures.total} kind="failed" />
       </section>
     </div>

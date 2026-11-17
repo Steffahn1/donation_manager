@@ -14,8 +14,8 @@ export default async function DonateCancelledPage({ searchParams }: PageProps<"/
   if (!donation) {
     return (
       <div className="card mx-auto max-w-lg space-y-4">
-        <h1 className="text-2xl font-bold">Payment not completed</h1>
-        <p className="text-slate-700">You have not been charged.</p>
+        <h1 className="page-title">Payment not completed</h1>
+        <p>You have not been charged.</p>
         <Link href="/campaigns" className="btn">See campaigns</Link>
       </div>
     );
@@ -26,11 +26,11 @@ export default async function DonateCancelledPage({ searchParams }: PageProps<"/
 
   return (
     <div className="card mx-auto max-w-lg space-y-4">
-      <h1 className="text-2xl font-bold">Payment not completed</h1>
+      <h1 className="page-title">Payment not completed</h1>
       {donation.status === "FAILED" ? (
-        <p className="error">{donation.failureReason ?? "The payment was declined."}</p>
+        <p className="error" role="alert">{donation.failureReason ?? "The payment was declined."}</p>
       ) : null}
-      <p className="text-slate-700">
+      <p>
         Your donation of {formatZar(donation.amountCents)} to {donation.campaign.name} was not completed. You have not
         been charged.
       </p>

@@ -7,9 +7,9 @@ export function ManagerForm() {
   const [state, action, pending] = useActionState(createManager, undefined);
   return (
     <form action={action} className="card space-y-4" key={state?.success}>
-      <h2 className="font-semibold">Add a campaign manager</h2>
+      <h2 className="section-title">Add a campaign manager</h2>
       {state?.error && <p className="error" role="alert">{state.error}</p>}
-      {state?.success && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">{state.success}</p>}
+      {state?.success && <p className="border-success bg-success-bg text-success border-l-4 px-3 py-2 text-sm" role="status">{state.success}</p>}
       <div>
         <label className="label" htmlFor="name">Name</label>
         <input className="input" id="name" name="name" required />

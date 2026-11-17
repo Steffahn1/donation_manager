@@ -69,9 +69,9 @@ export function CampaignForm({
         </div>
       </div>
       <div>
-        <label className="label" htmlFor="imagePath">Image path</label>
-        <input className="input" id="imagePath" name="imagePath" placeholder="/campaigns/my-campaign.jpg" defaultValue={initial.imagePath} />
-        <p className="mt-1 text-xs text-slate-500">Put the image file in <code>public/campaigns/</code>. Uploading is future work.</p>
+        <label className="label" htmlFor="imagePath">Image path (optional)</label>
+        <input className="input" id="imagePath" name="imagePath" placeholder="/campaigns/my-campaign.jpg" defaultValue={initial.imagePath} aria-describedby="imagePath-help" />
+        <p id="imagePath-help" className="help">Put the image file in <code>public/campaigns/</code>. Uploading is future work.</p>
       </div>
       <div>
         <label className="label" htmlFor="managerId">Campaign manager</label>

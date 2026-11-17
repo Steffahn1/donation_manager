@@ -19,8 +19,8 @@ export default async function VerifyEmailPage({ searchParams }: PageProps<"/veri
   if (!isTokenShaped(token)) {
     return (
       <div className="card mx-auto max-w-lg space-y-4">
-        <h1 className="text-2xl font-bold">This link is not valid</h1>
-        <p className="text-slate-700">
+        <h1 className="page-title">This link is not valid</h1>
+        <p>
           Please use the link from your most recent email, or sign up again with the same email to get a new one.
         </p>
         <Link href="/signup" className="btn">Sign up</Link>
@@ -30,8 +30,8 @@ export default async function VerifyEmailPage({ searchParams }: PageProps<"/veri
 
   return (
     <div className="card mx-auto max-w-sm space-y-4">
-      <h1 className="text-2xl font-bold">Confirm your email</h1>
-      <p className="text-slate-700">
+      <h1 className="page-title">Confirm your email</h1>
+      <p>
         Choose your name and password to finish creating your account. Donations you made with this email
         address will then appear in your account.
       </p>

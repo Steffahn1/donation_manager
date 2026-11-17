@@ -1,47 +1,18 @@
 /*
- * Styles for the /campaigns page only (trial redesign). Imported by that page alone, and every class
- * starts with "cx-", so the rest of the app keeps its current look. (Not a CSS module: next.config.ts
- * runs every *.css file through Tailwind as plain CSS, so module class names are never generated.) Palette: navy, coral, yellow, sea-foam; chamfered corners; slab and
- * condensed display type; Lora for reading text.
+ * Page-only styles for /campaigns: the hero, the wavy dividers and the stats band. Shared pieces
+ * (buttons, campaign cards, progress bars) come from globals.css. Classes start with "cx-".
+ * (Not a CSS module: next.config.ts runs every *.css file through Tailwind as plain CSS.)
  */
 
 .cx-page {
-  --navy: #274078;
-  --navy-dark: #1e305c;
-  --coral: #e86044;
-  --coral-dark: #c94b31;
-  --coral-text: #b3381f;
-  --yellow: #f8ba17;
-  --seafoam: #c4dddd;
-  --cream: #f3f1ea;
-  --ink: #343740;
-  --chamfer: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-
   /* Full-bleed: break out of the layout's centred <main> (max-w-6xl, px-4, py-8). */
   margin: -2rem calc(50% - 50vw) -2rem;
-  color: var(--ink);
-  font-family: var(--font-lora), Georgia, serif;
 }
 
 .cx-inner {
   max-width: 72rem;
   margin: 0 auto;
   padding: 0 1rem;
-}
-
-/* ---------- Display type ---------- */
-
-.cx-condensed {
-  font-family: var(--font-condensed), "Arial Narrow", sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.cx-slab {
-  font-family: var(--font-slab), Georgia, serif;
-  font-weight: 400;
-  line-height: 0.92;
 }
 
 /* ---------- Hero ---------- */
@@ -51,7 +22,7 @@
   overflow: hidden;
   background:
     radial-gradient(circle at 10% 100%, rgb(232 96 68 / 0.18), transparent 40%),
-    linear-gradient(160deg, var(--navy) 0%, var(--navy-dark) 100%);
+    linear-gradient(160deg, var(--color-navy) 0%, var(--color-navy-dark) 100%);
   color: #fff;
   padding: 4.5rem 0 6.5rem;
 }
@@ -69,12 +40,12 @@
   bottom: -0.55em;
   width: 108%;
   height: 0.5em;
-  color: var(--coral);
+  color: var(--color-coral);
 }
 
 .cx-headline {
   margin-top: 1.5rem;
-  color: var(--yellow);
+  color: var(--color-yellow);
   font-size: clamp(3rem, 9vw, 7rem);
   max-width: 14ch;
 }
@@ -94,65 +65,6 @@
   gap: 1rem;
 }
 
-/* ---------- Buttons ---------- */
-
-.cx-btn,
-.cx-btnOutline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 44px;
-  padding: 0.75rem 2.25rem 0.65rem;
-  /* 1.2rem bold counts as large text, so white on coral (3.4:1) passes. */
-  font-size: 1.2rem;
-  clip-path: var(--chamfer);
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.cx-btn {
-  background: var(--coral);
-  color: #fff;
-}
-
-.cx-btn:hover,
-.cx-btn:focus-visible {
-  background: var(--coral-dark);
-  transform: translateY(-2px);
-}
-
-/* clip-path cuts off a normal border and outline, so the outline button draws its edge as an inset shadow. */
-.cx-btnOutline {
-  color: #fff;
-  box-shadow: inset 0 0 0 2px #fff;
-}
-
-.cx-btnOutline:hover,
-.cx-btnOutline:focus-visible {
-  background: #fff;
-  color: var(--navy);
-}
-
-/*
- * Focus ring: navy on light backgrounds, yellow on the navy hero. clip-path would also cut off the
- * outline, so chamfered buttons drop the clip while focused.
- */
-.cx-btn:focus-visible,
-.cx-btnOutline:focus-visible,
-.cx-link:focus-visible {
-  clip-path: none;
-  outline: 3px solid var(--navy);
-  outline-offset: 3px;
-}
-
-.cx-hero .cx-btn:focus-visible,
-.cx-hero .cx-btnOutline:focus-visible {
-  outline-color: var(--yellow);
-}
-
 /* ---------- Wavy dividers ---------- */
 
 .cx-wave {
@@ -163,18 +75,18 @@
 
 .cx-waveIntoStats {
   margin-top: -47px;
-  color: var(--seafoam);
+  color: var(--color-seafoam);
 }
 
 .cx-waveOutOfStats {
-  color: var(--seafoam);
+  color: var(--color-seafoam);
   background: transparent;
 }
 
 /* ---------- Stats band ---------- */
 
 .cx-stats {
-  background: var(--seafoam);
+  background: var(--color-seafoam);
   padding: 2rem 0 2.5rem;
 }
 
@@ -192,13 +104,13 @@
 
 .cx-statValue {
   /* --coral on seafoam is only 2.4:1; the darker coral is 4.2:1 (fine for these large numbers). */
-  color: var(--coral-text);
+  color: var(--color-coral-text);
   font-size: clamp(2.5rem, 5vw, 3.75rem);
 }
 
 .cx-statLabel {
   margin-top: 0.75rem;
-  color: var(--navy);
+  color: var(--color-navy);
   font-size: 1.35rem;
   line-height: 1.2;
   text-transform: none;
@@ -216,12 +128,12 @@
 
 .cx-sectionTitle {
   text-align: center;
-  color: var(--navy);
+  color: var(--color-navy);
   font-size: clamp(2.5rem, 6vw, 3.75rem);
   line-height: 1;
 }
 
-.cx-sectionTitle .cx-light {
+.cx-sectionTitle .light {
   font-weight: 400;
 }
 
@@ -233,240 +145,11 @@
   line-height: 1.7;
 }
 
-.cx-grid {
-  margin-top: 3rem;
-  display: grid;
-  gap: 2.5rem 2rem;
-}
-
-@media (min-width: 640px) {
-  .cx-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .cx-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.cx-empty {
-  margin-top: 2rem;
-  text-align: center;
-}
-
-/* ---------- Campaign card ---------- */
-
-.cx-card {
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  box-shadow: 0 1px 0 rgb(39 64 120 / 0.08);
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.cx-card:hover,
-.cx-card:focus-within {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 36px -18px rgb(30 48 92 / 0.45);
-}
-
-.cx-media {
-  position: relative;
-  overflow: hidden;
-  clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);
-}
-
-.cx-media img,
-.cx-media > div {
-  height: 12rem;
-  width: 100%;
-  transition: transform 0.5s ease;
-}
-
-.cx-card:hover .cx-media img,
-.cx-card:hover .cx-media > div {
-  transform: scale(1.06);
-}
-
-/* Yellow hatched stripe under the image. */
-.cx-stripe {
-  height: 14px;
-  background:
-    linear-gradient(var(--yellow), var(--yellow)) bottom / 100% 5px no-repeat,
-    repeating-linear-gradient(115deg, var(--yellow) 0 3px, transparent 3px 10px) top / 100% 9px no-repeat;
-}
-
-.cx-badge {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  padding: 0.25rem 0.75rem 0.15rem;
-  background: var(--navy-dark);
-  color: #fff;
-  font-size: 0.95rem;
-  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
-}
-
-.cx-body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.9rem;
-  padding: 1.25rem 1.25rem 1.5rem;
-}
-
-.cx-cardTitle {
-  color: var(--navy);
-  font-size: 1.75rem;
-  line-height: 1.05;
-}
-
-.cx-cardText {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 0.98rem;
-  line-height: 1.65;
-}
-
-.cx-impact {
-  align-self: flex-start;
-  padding: 0.3rem 0.75rem 0.2rem;
-  background: rgb(248 186 23 / 0.22);
-  color: var(--navy-dark);
-  font-size: 1rem;
-}
-
-.cx-progress {
-  margin-top: auto;
-}
-
-.cx-raised {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.cx-raisedValue {
-  color: var(--coral);
-  font-size: 1.75rem;
-}
-
-.cx-raisedOf {
-  color: var(--navy);
-  font-size: 1rem;
-  text-transform: none;
-}
-
-.cx-track {
-  margin-top: 0.5rem;
-  height: 12px;
-  background: var(--seafoam);
-  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
-}
-
-.cx-fill {
-  height: 100%;
-  background: var(--coral);
-  transition: width 0.6s ease;
-}
-
-.cx-meta {
-  margin-top: 0.4rem;
-  font-size: 0.85rem;
-  color: rgb(52 55 64 / 0.75);
-}
-
-.cx-cardActions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.cx-cardActions .cx-btn {
-  padding: 0.6rem 1.5rem 0.5rem;
-  /* Smaller than large text, so use the darker coral: white on it is 4.6:1. */
-  font-size: 1.05rem;
-  background: var(--coral-dark);
-}
-
-.cx-cardActions .cx-btn:hover,
-.cx-cardActions .cx-btn:focus-visible {
-  background: #a83a22;
-}
-
-.cx-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--navy);
-  font-size: 1.1rem;
-}
-
-.cx-arrow {
-  color: var(--yellow);
-  transition: transform 0.2s ease;
-}
-
-.cx-link:hover .cx-arrow,
-.cx-link:focus-visible .cx-arrow {
-  transform: translate(3px, -3px);
-}
-
-.cx-link:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
-
-/* ---------- Motion: cards rise in as they scroll into view (no JavaScript) ---------- */
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .cx-card {
-      animation: rise linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 35%;
-    }
-  }
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    translate: 0 40px;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cx-card,
-  .cx-btn,
-  .cx-btnOutline,
-  .cx-media img,
-  .cx-media > div,
-  .cx-arrow,
-  .cx-fill {
-    transition: none;
-  }
-}
-
 /* ---------- Loading placeholder (while the totals and list stream in) ---------- */
 
 .cx-loading {
-  background: var(--seafoam);
+  background: var(--color-seafoam);
   padding: 4rem 1rem;
   text-align: center;
-  color: var(--navy);
+  color: var(--color-navy);
 }

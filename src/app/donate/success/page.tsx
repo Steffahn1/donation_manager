@@ -28,15 +28,15 @@ export default async function DonateSuccessPage({ searchParams }: PageProps<"/do
       const units = impactUnits(donation.amountCents, campaign.impactAmountCents);
       return (
         <Message title="Thank you for your donation!">
-          <p className="text-slate-700">
-            Your donation of <strong>{formatZar(donation.amountCents)}</strong> to {campaign.name} has been received.
+          <p>
+            Your donation of <strong className="font-display text-coral-text">{formatZar(donation.amountCents)}</strong> to {campaign.name} has been received.
           </p>
           {units > 0 && (
-            <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-              That pays for {units} × {campaign.impactLabel}.
+            <p className="impact-chip">
+              That pays for {units} × {campaign.impactLabel}
             </p>
           )}
-          <p className="text-sm text-slate-600">
+          <p className="text-muted text-sm">
             A receipt with a private link to this donation is on its way to your email.
           </p>
           <Link href={`/campaigns/${campaign.slug}`} className="btn">See the campaign</Link>
@@ -50,8 +50,8 @@ export default async function DonateSuccessPage({ searchParams }: PageProps<"/do
     case "FAILED":
       return (
         <Message title="Almost done…">
-          <p className="text-slate-700">
-            We&apos;re confirming your donation of <strong>{formatZar(donation.amountCents)}</strong> to {campaign.name}.
+          <p>
+            We&apos;re confirming your donation of <strong className="font-display text-coral-text">{formatZar(donation.amountCents)}</strong> to {campaign.name}.
           </p>
           <PaymentStatusPoller />
         </Message>
@@ -59,7 +59,7 @@ export default async function DonateSuccessPage({ searchParams }: PageProps<"/do
     case "EXPIRED":
       return (
         <Message title="This payment page expired">
-          <p className="text-slate-700">You have not been charged.</p>
+          <p>You have not been charged.</p>
           <Link href={`/donate/${campaign.slug}`} className="btn">Start again</Link>
         </Message>
       );
@@ -69,7 +69,7 @@ export default async function DonateSuccessPage({ searchParams }: PageProps<"/do
 function Message({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="card mx-auto max-w-lg space-y-4">
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <h1 className="page-title">{title}</h1>
       {children}
     </div>
   );

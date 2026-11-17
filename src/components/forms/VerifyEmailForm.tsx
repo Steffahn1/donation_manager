@@ -16,7 +16,19 @@ export function VerifyEmailForm({ token }: { token: string }) {
       </div>
       <div>
         <label className="label" htmlFor="password">Choose a password</label>
-        <input className="input" id="password" name="password" type="password" minLength={8} autoComplete="new-password" required />
+        <input
+          className="input"
+          id="password"
+          name="password"
+          type="password"
+          minLength={8}
+          autoComplete="new-password"
+          aria-describedby="password-help"
+          required
+        />
+        <p id="password-help" className="help">
+          At least 8 characters.
+        </p>
       </div>
       <button className="btn w-full" disabled={pending}>
         {pending ? "Confirming…" : "Confirm my email"}

@@ -5,22 +5,29 @@ description: The app's visual design system (colours, fonts, buttons, spacing, c
 
 # /ui-design-system
 
-The look introduced on `/campaigns` (branch `campaigns-redesign`), inspired by a bold charity site: navy, coral and
+The app's look (rolled out on branch `campaigns-redesign`), inspired by a bold charity site: navy, coral and
 yellow, chunky slab numbers, condensed uppercase headings, chamfered (cut-corner) shapes. Every page must use
 these rules. If a page needs something not covered here, ask the user and then add it to this file.
 
-**Reference implementation:** `src/app/campaigns/page.tsx` + `src/app/campaigns/campaigns.css`.
+**Where it lives:**
+- `src/app/globals.css`: tokens (`@theme`: `bg-navy`, `text-coral-text`, `border-line`, `font-display`,
+  `font-heading`, `font-sans` = Lora, …) and the shared classes: `page-title`, `section-title`, `light`, `heading`,
+  `stat-number`, `link`, `arrow-link` (+ `.arrow`), `card`, `btn`, `btn-sm`, `btn-secondary`, `btn-on-dark`,
+  `label`, `input`, `help`, `error`, `badge` + `badge-success|info|danger|neutral|closed`, `table` (+ `.num` cells),
+  `impact-chip`, `hatch-stripe`, `progress-track`/`progress-fill`, `campaign-grid`, `campaign-card`.
+  `.on-dark` on a navy area switches focus rings to yellow.
+- `src/app/layout.tsx`: loads the fonts once, navy header with skip link, navy-dark footer.
+- Components: `CampaignCard`, `ProgressBar` (pass `label` with the campaign name), `StatCard`, `CampaignImage`.
+- `src/app/campaigns/campaigns.css`: page-only pieces of the showcase page (hero, wavy dividers, stats band), prefixed `cx-`.
 
 ## 0. How to apply it in this codebase
 
 - **No CSS modules.** `next.config.ts` runs every `*.css` file through Tailwind as plain CSS, so `*.module.css`
   class names come out `undefined`. Use Tailwind classes or plain CSS with a prefix.
-- **While only `/campaigns` uses the system:** page-specific classes start with `cx-` and fonts load in that page.
-- **When rolling it out to the whole app:** move the tokens below into `globals.css` (`:root` variables plus an
-  `@theme` block so Tailwind gets `bg-navy`, `text-coral-text`, `font-slab`, …), load the three fonts once in
-  `src/app/layout.tsx`, and turn the shared building blocks (`.card`, `.btn`, `.btn-secondary`, `.input`,
-  `.label`, `.error`, `.table`) into the styles below, so existing pages change in one place. Remove the
-  `cx-` duplicates afterwards.
+- Use the shared classes above before writing new styles. Something reused on two pages becomes a shared class in
+  `globals.css`; something truly page-only goes in a page stylesheet with a page prefix (like `cx-`).
+- No old palette: no `emerald-*`, `slate-*`, `sky-*`, `amber-*` or `rounded-*` classes (except `rounded-full` for spinners).
+- If styles stop updating in `npm run dev`, Turbopack's cache is stale: stop the server, delete `.next/dev`, restart.
 - Restyling never changes behaviour: keep form field `name`s, hidden inputs, `useActionState` wiring, server-side
   data loading and the privacy rules from CLAUDE.md exactly as they are. Run `/access-review` afterwards.
 
@@ -37,7 +44,8 @@ these rules. If a page needs something not covered here, ask the user and then a
 | `--seafoam` | `#c4dddd` | Stats bands, table header background, progress track |
 | `--cream` | `#f3f1ea` | Soft panels, table row hover |
 | `--ink` | `#343740` | Body text |
-| `--muted` | `#64748b` | Secondary text, input borders |
+| `--muted` | `#5b6474` | Secondary text, help text, input borders (6.0:1 on white, 5.3:1 on cream) |
+| `--line` | `#e6e7e8` | Table row lines, dividers |
 | `--danger` | `#b91c1c` | Error text and borders (on `#fef2f2` background) |
 | `--success` | `#166534` | Success/paid text (on `#dcfce7` background) |
 
@@ -110,8 +118,8 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
 **Forms:**
 - Every input, select and textarea has a visible `<label htmlFor>` (Barlow Condensed 700 navy, 1rem). Placeholders
   are examples only, never the label. Hidden-label inputs are not allowed.
-- Inputs: Lora 1rem, white, 2px `--muted` border, chamfer 6px, padding 0.6rem 0.75rem, min height 44px; focus
-  border navy plus the focus ring below.
+- Inputs: Lora 1rem, white, 2px `--muted` border, **square corners** (a clip-path chamfer would cut the border),
+  padding 0.5rem 0.75rem, min height 44px; focus border navy plus the focus ring below.
 - Help text under the field, linked with `aria-describedby`. Errors: `--danger` text with the word "Error" or a
   clear sentence (not colour alone), `aria-invalid="true"` on the field, and the form-level error in a
   `role="alert"` box (the existing `.error` style, restyled). Required fields say "(required)" or mark optional ones.
@@ -136,6 +144,11 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
    | white on `--coral`, `--coral` on white | 3.4 | **large text only** |
    | `--coral` on seafoam | 2.4 | **never text** |
    | yellow on white | 1.8 | **never text, never a focus ring** |
+   | `--muted` on white / on cream | 6.0 / 5.3 | all text |
+   | navy on cream | 8.9 | all text |
+   | white 85% on navy / navy-dark | 7.8 / 9.7 | all text (header and footer) |
+   | success on its bg / danger on its bg / navy on info bg | 6.5 / 5.9 / 8.2 | badges, messages |
+   | `--muted` on seafoam | 3.3 | **large text only** |
 
    New colour pair? Compute the ratio before using it and add it to this table.
 2. **Focus.** Every interactive element shows `:focus-visible` with a 3px ring, offset 2–3px: navy on light

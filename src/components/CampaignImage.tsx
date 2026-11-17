@@ -7,7 +7,7 @@
 export function CampaignImage({ src, alt, className = "" }: { src: string | null; alt: string; className?: string }) {
   if (!src) {
     return (
-      <div className={`flex items-center justify-center bg-gradient-to-br from-emerald-100 to-sky-100 text-sm text-emerald-900 ${className}`}>
+      <div className={`heading flex items-center justify-center bg-gradient-to-br from-seafoam to-cream text-navy ${className}`}>
         {alt}
       </div>
     );

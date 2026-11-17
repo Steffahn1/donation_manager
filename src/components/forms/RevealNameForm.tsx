@@ -10,22 +10,22 @@ export function RevealNameForm({ donationId, name }: { donationId: string; name:
 
   if (!confirming) {
     return (
-      <button type="button" className="text-xs text-emerald-700 underline" onClick={() => setConfirming(true)}>
+      <button type="button" className="link block py-1 text-sm" onClick={() => setConfirming(true)}>
         Show my name
       </button>
     );
   }
   return (
-    <form action={action} className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+    <form action={action} className="border-coral-text bg-cream space-y-2 border-l-4 p-3 text-sm">
       <p>
         Charity staff will see this gift as <strong>{name}</strong> instead of &ldquo;Anonymous&rdquo;. This
         can&apos;t be undone.
       </p>
-      {state?.error && <p className="text-red-800" role="alert">{state.error}</p>}
+      {state?.error && <p className="error" role="alert">{state.error}</p>}
       <input type="hidden" name="donationId" value={donationId} />
-      <div className="flex gap-2">
-        <button className="btn px-2 py-1 text-xs" disabled={pending}>{pending ? "Saving…" : "Yes, show my name"}</button>
-        <button type="button" className="btn-secondary px-2 py-1 text-xs" onClick={() => setConfirming(false)} disabled={pending}>
+      <div className="flex flex-wrap gap-2">
+        <button className="btn-sm" disabled={pending}>{pending ? "Saving…" : "Yes, show my name"}</button>
+        <button type="button" className="btn-secondary" onClick={() => setConfirming(false)} disabled={pending}>
           Cancel
         </button>
       </div>
