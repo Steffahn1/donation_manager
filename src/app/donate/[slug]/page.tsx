@@ -20,17 +20,20 @@ export default async function DonatePage({ params, searchParams }: PageProps<"/d
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div className="space-y-3">
-        <Link href={`/campaigns/${campaign.slug}`} className="link text-sm">
+        <Link href={`/campaigns/${campaign.slug}`} className="link tap text-sm">
           ← Back to {campaign.name}
         </Link>
         <h1 className="page-title">
           Donate to <span className="light">{campaign.name}</span>
         </h1>
-        <ProgressBar
-          raisedCents={campaign.raisedCents}
-          targetCents={campaign.targetCents}
-          label={`${campaign.name}: raised towards target`}
-        />
+        {/* On a white card: coral numbers on the cream page background would only be 3.0:1. */}
+        <div className="card">
+          <ProgressBar
+            raisedCents={campaign.raisedCents}
+            targetCents={campaign.targetCents}
+            label={`${campaign.name}: raised towards target`}
+          />
+        </div>
       </div>
       <div className="card">
         {open ? (

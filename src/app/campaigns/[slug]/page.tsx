@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicCampaignBySlug } from "@/lib/queries/campaigns";
-import { isAcceptingDonations, notAcceptingReason } from "@/lib/campaigns";
+import { campaignAvailability, notAcceptingReason } from "@/lib/campaigns";
 import { formatZar } from "@/lib/money";
 import { ProgressBar } from "@/components/ProgressBar";
 import { CampaignImage } from "@/components/CampaignImage";
@@ -13,7 +13,8 @@ export default async function CampaignPage({ params }: PageProps<"/campaigns/[sl
   const campaign = await getPublicCampaignBySlug(slug);
   if (!campaign) notFound();
 
-  const open = isAcceptingDonations(campaign);
+  const availability = campaignAvailability(campaign);
+  const open = availability === "open";
 
   return (
     <article className="grid gap-8 lg:grid-cols-[2fr_1fr]">
@@ -21,7 +22,10 @@ export default async function CampaignPage({ params }: PageProps<"/campaigns/[sl
         <div>
           <div className="campaign-card-media">
             <CampaignImage src={campaign.imagePath} alt={campaign.name} className="h-72 w-full" />
-            {!open && <span className="badge badge-closed absolute top-3 left-3">Closed</span>}
+            {availability === "closed" && <span className="badge badge-closed absolute top-3 left-3">Closed</span>}
+            {availability === "upcoming" && (
+              <span className="badge badge-info absolute top-3 left-3">Starts {dateFmt.format(campaign.startDate)}</span>
+            )}
           </div>
           <div className="hatch-stripe" aria-hidden="true" />
         </div>

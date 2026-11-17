@@ -2,21 +2,22 @@
 
 import { useActionState } from "react";
 import { signup } from "@/app/actions/account";
+import { FORM_ERROR_ID, fieldErrorProps } from "@/lib/form-errors";
 
 export function SignupForm() {
   const [state, action, pending] = useActionState(signup, undefined);
   return (
     <form action={action} className="space-y-4">
-      {state?.error && <p className="error" role="alert">{state.error}</p>}
+      {state?.error && <p id={FORM_ERROR_ID} className="error" role="alert">{state.error}</p>}
       <div>
-        <label className="label" htmlFor="email">Email</label>
+        <label className="label" htmlFor="email">Email (required)</label>
         <input
           className="input"
           id="email"
           name="email"
           type="email"
           autoComplete="email"
-          aria-describedby="email-help"
+          {...fieldErrorProps(state, "email", "email-help")}
           required
         />
         <p id="email-help" className="help">

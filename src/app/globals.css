@@ -31,6 +31,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+:root {
+  /* Vertical padding of <main> (layout.tsx). Full-width pages cancel it with negative margins. */
+  --main-pad-y: 2rem;
+}
+
 body {
   background: var(--color-cream);
   color: var(--color-ink);
@@ -84,8 +89,15 @@ body:has([data-full-bleed]) {
   .link {
     @apply text-navy underline decoration-2 underline-offset-4 hover:decoration-coral;
   }
+  /* Stand-alone links and text buttons: at least 44px tall to tap. (Links inside a sentence don't need it.) */
+  .tap {
+    @apply inline-flex min-h-11 items-center;
+  }
 
   /* ---------- Cards ---------- */
+  .main-pad {
+    padding-block: var(--main-pad-y);
+  }
   .card {
     @apply bg-white p-5;
     box-shadow: 0 1px 0 rgb(39 64 120 / 0.08), 0 0 0 1px rgb(39 64 120 / 0.04);
@@ -209,7 +221,7 @@ body:has([data-full-bleed]) {
 @layer components {
   /* Text link with a yellow arrow that nudges on hover. */
   .arrow-link {
-    @apply font-heading text-navy inline-flex items-center gap-1.5 uppercase;
+    @apply font-heading text-navy inline-flex min-h-11 items-center gap-1.5 uppercase;
     font-weight: 700;
     font-size: 1.1rem;
     letter-spacing: 0.02em;

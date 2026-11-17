@@ -39,6 +39,20 @@ export function notAcceptingReason(campaign: DonatableCampaign, now: Date = new 
   return "This campaign has not started yet.";
 }
 
+export type CampaignAvailability = "open" | "upcoming" | "closed" | "draft";
+
+/**
+ * Where a campaign stands for donors, so pages never call an upcoming campaign "closed".
+ * open: accepting donations now. upcoming: ACTIVE but its start date is still ahead.
+ * closed: CLOSED, or its end date has passed. draft: not launched (never shown publicly).
+ */
+export function campaignAvailability(campaign: DonatableCampaign, now: Date = new Date()): CampaignAvailability {
+  if (isAcceptingDonations(campaign, now)) return "open";
+  if (campaign.status === "DRAFT") return "draft";
+  if (campaign.status === "CLOSED" || todayIso(now) > dateIso(campaign.endDate)) return "closed";
+  return "upcoming";
+}
+
 /**
  * Prisma `where` filter limiting which campaigns a staff user may see.
  * Super admin: all. Campaign manager: only their own. Anyone else: nothing.

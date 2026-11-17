@@ -51,7 +51,9 @@ these rules. If a page needs something not covered here, ask the user and then a
 
 Status badges (donations/campaigns), always with a text label, never colour alone:
 PAID/ACTIVE `--success` on `#dcfce7` · PENDING navy on `#dbeafe` · FAILED `--danger` on `#fef2f2` ·
-EXPIRED/DRAFT `--ink` on `#e6e7e8` · CLOSED white on `--navy-dark`.
+EXPIRED/DRAFT `--ink` on `#e6e7e8` · CLOSED white on `--navy-dark` · UPCOMING ("Starts 1 December") navy on `#dbeafe`.
+Use `campaignAvailability()` (`src/lib/campaigns.ts`) for open / upcoming / closed: never call a campaign
+"Closed" just because it isn't accepting donations yet.
 
 ## 2. Typography
 
@@ -63,8 +65,10 @@ Three Google fonts via `next/font/google`:
 | Headings, buttons, labels, badges, table headers (`--font-condensed`) | Barlow Condensed 700 (400 for the light half of a two-tone heading) | UPPERCASE, letter-spacing 0.02em |
 | Reading text (`--font-lora`) | Lora 400 | Paragraphs, descriptions, table cells, inputs. Line-height 1.6–1.7 |
 
-Scale: hero `clamp(3rem, 9vw, 7rem)` · section title `clamp(2.5rem, 6vw, 3.75rem)` · stat number
-`clamp(2.5rem, 5vw, 3.75rem)` · card title 1.75rem · body 1rem–1.15rem · small/meta 0.85rem (never smaller).
+Scale: hero `clamp(3rem, 9vw, 7rem)` (showcase pages only) · page title `.page-title` `clamp(2rem, 5vw, 3rem)` ·
+section title `.section-title` 1.6rem (a showcase band like "OUR CAMPAIGNS" on `/campaigns` may go up to
+`clamp(2.5rem, 6vw, 3.75rem)`) · stat number `clamp(2.5rem, 5vw, 3.75rem)` in bands, 2.25rem in stat cards ·
+card title 1.75rem · body 1rem–1.15rem · small/meta 0.85rem (never smaller).
 Two-tone section headings: first word bold, rest light (`OUR <span class=light>CAMPAIGNS</span>`).
 One `<h1>` per page; headings in order (h1 → h2 → h3), never skipped for looks.
 Money is always `formatZar` (exact) or the whole-rand helper for headline totals; numbers in tables use
@@ -81,6 +85,8 @@ Money is always `formatZar` (exact) or the whole-rand helper for headline totals
 - Container: `max-width: 72rem`, side padding 1rem (16px). Sections: 3.5–5rem vertical padding. Grid gaps
   2–2.5rem. Inside a card: 1.25rem padding, 0.75–1rem between items.
 - Full-width bands break out of `<main>` with `margin-inline: calc(50% - 50vw)` and `data-full-bleed` on the wrapper.
+  To also touch the header/footer, cancel `<main>`'s padding with `margin-block: calc(-1 * var(--main-pad-y))`
+  (the variable is set in `globals.css` and used by `.main-pad` on `<main>`; never hard-code it).
 - Motion: hover lift `translateY(-6px)` + shadow on cards, `-2px` on buttons, 0.2–0.25s ease. Optional scroll-in
   via `animation-timeline: view()` inside `@supports`. Everything under `prefers-reduced-motion: no-preference`
   (or switched off under `reduce`). Nothing essential may depend on animation or hover.
@@ -122,7 +128,11 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
   padding 0.5rem 0.75rem, min height 44px; focus border navy plus the focus ring below.
 - Help text under the field, linked with `aria-describedby`. Errors: `--danger` text with the word "Error" or a
   clear sentence (not colour alone), `aria-invalid="true"` on the field, and the form-level error in a
-  `role="alert"` box (the existing `.error` style, restyled). Required fields say "(required)" or mark optional ones.
+  `role="alert"` box (`.error`). In code: server actions return `{ error, field }` (`firstIssue(zodError)` from
+  `src/lib/form-errors.ts`; `field: "*"` when the error is about every field), the error box gets
+  `id={FORM_ERROR_ID}`, and every input spreads `{...fieldErrorProps(state, "name", "name-help")}`.
+- Required: add "All fields are required." (or "…unless marked optional.") at the top of the form, mark optional
+  fields "(optional)" in the label; a one-field form says "(required)" in the label.
 - Group radio buttons/checkboxes in `<fieldset>` + `<legend>`.
 
 **Charts (Recharts):** series colours navy, coral, yellow, seafoam in that order; axis text `--muted`; tooltips use
@@ -149,6 +159,7 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
    | white 85% on navy / navy-dark | 7.8 / 9.7 | all text (header and footer) |
    | success on its bg / danger on its bg / navy on info bg | 6.5 / 5.9 / 8.2 | badges, messages |
    | `--muted` on seafoam | 3.3 | **large text only** |
+   | `--coral` on cream | 3.0 | **avoid**: put coral numbers on a white `.card` (or use `--coral-text`, 5.3) |
 
    New colour pair? Compute the ratio before using it and add it to this table.
 2. **Focus.** Every interactive element shows `:focus-visible` with a 3px ring, offset 2–3px: navy on light
@@ -163,7 +174,8 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
 6. **Keyboard.** Everything works with Tab/Enter/Space in a logical order; no hover-only content; the skip link
    and landmarks (`header`, `main`, `nav`, `footer`) stay.
 7. **Motion.** Respect `prefers-reduced-motion`; no auto-playing or flashing content.
-8. **Size.** Touch targets at least 44×44px; layout works at 320px wide with no sideways scroll and at 200% zoom.
+8. **Size.** Touch targets at least 44×44px (buttons and `.arrow-link` have it built in; stand-alone `.link`s and
+   text buttons add `.tap`; links inside a sentence are exempt); layout works at 320px wide with no sideways scroll and at 200% zoom.
 
 ## 6. Checklist before saying a UI change is done
 

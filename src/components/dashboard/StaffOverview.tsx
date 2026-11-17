@@ -102,7 +102,7 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
                   return (
                     <tr key={c.id}>
                       <td>
-                        <Link href={`/dashboard/campaigns/${c.id}`} className="link font-semibold">
+                        <Link href={`/dashboard/campaigns/${c.id}`} className="link tap font-semibold">
                           {c.name}
                         </Link>
                       </td>
@@ -132,7 +132,7 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="section-title">Campaign managers</h2>
-            <Link href="/admin/managers" className="link text-sm">Manage</Link>
+            <Link href="/admin/managers" className="link tap text-sm">Manage</Link>
           </div>
           <div className="card overflow-x-auto p-0">
             <table className="table">

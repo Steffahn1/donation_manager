@@ -38,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </div>
         </header>
-        <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+        <main id="main" className="main-pad mx-auto w-full max-w-6xl flex-1 px-4">
           {children}
         </main>
         <footer className="on-dark bg-navy-dark py-5 text-center text-sm text-white/85">

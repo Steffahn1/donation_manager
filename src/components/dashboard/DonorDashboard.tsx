@@ -59,7 +59,7 @@ export async function DonorDashboard({ user }: { user: CurrentUser }) {
                 {summary.campaigns.map((c) => (
                   <div key={c.campaignId} className="card space-y-3">
                     <div className="flex items-baseline justify-between gap-2">
-                      <Link href={`/campaigns/${c.slug}`} className="heading text-navy text-xl underline-offset-4 hover:underline">{c.name}</Link>
+                      <Link href={`/campaigns/${c.slug}`} className="heading tap text-navy text-xl underline-offset-4 hover:underline">{c.name}</Link>
                       <span className="text-muted text-sm">You gave {formatZar(c.givenCents)}</span>
                     </div>
                     {c.impactUnits > 0 && (

@@ -36,7 +36,7 @@ export default async function AdminCampaignsPage() {
                 <td>{c.manager.name}</td>
                 <td className="whitespace-nowrap">{dateIso(c.startDate)} → {dateIso(c.endDate)}</td>
                 <td className="num">{formatZar(totals(c.id).raisedCents)} / {formatZar(c.targetCents)}</td>
-                <td><Link href={`/admin/campaigns/${c.id}`} className="link" aria-label={`Edit ${c.name}`}>Edit</Link></td>
+                <td><Link href={`/admin/campaigns/${c.id}`} className="link tap" aria-label={`Edit ${c.name}`}>Edit</Link></td>
               </tr>
             ))}
           </tbody>

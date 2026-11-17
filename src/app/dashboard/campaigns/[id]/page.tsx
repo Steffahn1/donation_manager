@@ -40,13 +40,13 @@ export default async function StaffCampaignPage({ params }: PageProps<"/dashboar
   return (
     <div className="space-y-8">
       <div className="space-y-2">
-        <Link href="/dashboard" className="link text-sm">← Dashboard</Link>
+        <Link href="/dashboard" className="link tap text-sm">← Dashboard</Link>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h1 className="page-title">{campaign.name}</h1>
           <div className="flex gap-3 text-sm">
-            <Link href={`/campaigns/${campaign.slug}`} className="link">Public page</Link>
+            <Link href={`/campaigns/${campaign.slug}`} className="link tap">Public page</Link>
             {user.role === "SUPER_ADMIN" && (
-              <Link href={`/admin/campaigns/${campaign.id}`} className="link">Edit</Link>
+              <Link href={`/admin/campaigns/${campaign.id}`} className="link tap">Edit</Link>
             )}
           </div>
         </div>

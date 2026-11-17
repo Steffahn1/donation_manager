@@ -5,8 +5,10 @@
  */
 
 .cx-page {
-  /* Full-bleed: break out of the layout's centred <main> (max-w-6xl, px-4, py-8). */
-  margin: -2rem calc(50% - 50vw) -2rem;
+  /* Full-bleed: break out of the layout's centred <main>: sideways to the window edges, and up/down by
+     <main>'s own padding (--main-pad-y, set in globals.css) so the hero touches the header. */
+  margin-block: calc(-1 * var(--main-pad-y));
+  margin-inline: calc(50% - 50vw);
 }
 
 .cx-inner {

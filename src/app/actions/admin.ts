@@ -9,8 +9,10 @@ import { slugify } from "@/lib/campaigns";
 import { replaceableSignupWhere } from "@/lib/verification-rules";
 import { formatZar, parseRandToCents } from "@/lib/money";
 import { Prisma } from "@/generated/prisma/client";
+import { firstIssue } from "@/lib/form-errors";
 
-export type AdminFormState = { error?: string; success?: string } | undefined;
+/** `field` is the input the error is about, for aria-invalid. */
+export type AdminFormState = { error?: string; field?: string; success?: string } | undefined;
 
 /** Campaign amounts are Postgres INT cents (max ~R21.4m); cap well below that. */
 const MAX_CAMPAIGN_CENTS = 10_000_000_00; // R10 000 000
@@ -47,7 +49,7 @@ const campaignSchema = z
     impactLabel: z.string().trim().min(3, "Describe the impact, e.g. 'family fed for a week'.").max(80),
     managerId: z.string().min(1, "Choose a campaign manager."),
   })
-  .refine((d) => d.endDate >= d.startDate, { message: "End date must be on or after the start date." });
+  .refine((d) => d.endDate >= d.startDate, { message: "End date must be on or after the start date.", path: ["endDate"] });
 
 /** Create (campaignId = null) or update a campaign. Super admin only. */
 export async function saveCampaign(
@@ -58,12 +60,12 @@ export async function saveCampaign(
   await requireRole("SUPER_ADMIN");
 
   const parsed = campaignSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return firstIssue(parsed.error);
   const d = parsed.data;
 
   // The assigned user must really be a campaign manager.
   const manager = await db.user.findFirst({ where: { id: d.managerId, role: "CAMPAIGN_MANAGER" } });
-  if (!manager) return { error: "Choose a valid campaign manager." };
+  if (!manager) return { error: "Choose a valid campaign manager.", field: "managerId" };
 
   const data = {
     name: d.name,
@@ -132,7 +134,7 @@ export async function createManager(_prev: AdminFormState, formData: FormData): 
   await requireRole("SUPER_ADMIN");
 
   const parsed = managerSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return firstIssue(parsed.error);
   const { name, email, password } = parsed.data;
 
   const passwordHash = await hashPassword(password);
@@ -154,7 +156,7 @@ export async function createManager(_prev: AdminFormState, formData: FormData): 
     });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "An account with that email already exists." };
+      return { error: "An account with that email already exists.", field: "email" };
     }
     throw e;
   }

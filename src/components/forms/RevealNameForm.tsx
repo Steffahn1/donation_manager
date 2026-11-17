@@ -10,7 +10,7 @@ export function RevealNameForm({ donationId, name }: { donationId: string; name:
 
   if (!confirming) {
     return (
-      <button type="button" className="link block py-1 text-sm" onClick={() => setConfirming(true)}>
+      <button type="button" className="link tap text-sm" onClick={() => setConfirming(true)}>
         Show my name
       </button>
     );

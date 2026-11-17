@@ -139,6 +139,12 @@
 - Also on this branch: `/access-review` (PASS), CSV export queries moved into `src/lib/queries/`.
 - Checked: typecheck, lint, 202 tests, production build; every page looked at in the browser as guest,
   donor, campaign manager and super admin, at desktop and phone width.
+- Review fixes (reviewer: ready to push, 1 should-fix + 5 minor, all fixed): upcoming campaigns show
+  "Starts {date}" instead of "Closed" (`campaignAvailability`, tested); coral amounts on the donate page
+  sit on a white card; stand-alone links are 44px tall (`.tap`); `<main>` padding is a variable the
+  full-width page cancels; every form says which fields are required, server actions return the failing
+  field and inputs get `aria-invalid` (`src/lib/form-errors.ts`, tested); export queries tested with a
+  mocked database (masking, scoping, donor-only). 217 tests.
 - Note: CSS modules don't work in this project (`next.config.ts` runs all CSS through Tailwind as plain
   CSS); if styles stop updating in dev, delete `.next/dev` and restart.
 

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { reviewDonation, startCheckout, type DonateState } from "@/app/actions/donate";
 import type { DonateValues } from "@/lib/donations";
 import { formatZar } from "@/lib/money";
+import { FORM_ERROR_ID, fieldErrorProps } from "@/lib/form-errors";
 
 const PRESETS = ["100", "250", "500", "1000"];
 
@@ -72,7 +73,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
         aria-labelledby="confirm-heading"
       >
         <h2 id="confirm-heading" className="section-title">Please confirm your payment</h2>
-        {review.error && <p className="error" role="alert">{review.error}</p>}
+        {review.error && <p id={FORM_ERROR_ID} className="error" role="alert">{review.error}</p>}
         <dl className="divide-line border-line divide-y border bg-white">
           <Row label="Campaign" value={campaignName} />
           <Row label="Amount" value={<span className="font-display text-coral-text text-xl">{formatZar(amountCents)}</span>} />
@@ -118,7 +119,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
 
   return (
     <form action={formAction} onSubmit={() => setEditing(false)} className="space-y-4">
-      {state.error && <p className="error" role="alert">{state.error}</p>}
+      {state.error && <p id={FORM_ERROR_ID} className="error" role="alert">{state.error}</p>}
       <input type="hidden" name="intent" value="review" />
       <p className="text-muted text-sm">All fields are required.</p>
 
@@ -145,7 +146,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
             id="amount"
             name="amount"
             inputMode="decimal"
-            aria-describedby="amount-help"
+            {...fieldErrorProps(state, "amount", "amount-help")}
             required
             value={values.amount}
             onChange={(e) => setValues((v) => ({ ...v, amount: e.target.value }))}
@@ -160,6 +161,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
           className="input"
           id="name"
           name="name"
+          {...fieldErrorProps(state, "name")}
           autoComplete="name"
           required
           value={values.name}
@@ -176,7 +178,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
           autoComplete="email"
           required
           readOnly={account !== null}
-          aria-describedby={account ? "email-help" : undefined}
+          {...fieldErrorProps(state, "email", account ? "email-help" : undefined)}
           value={values.email}
           onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
         />

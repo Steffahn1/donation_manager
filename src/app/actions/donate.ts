@@ -25,9 +25,10 @@ import {
 } from "@/lib/stripe";
 import { generateToken } from "@/lib/tokens";
 import { Prisma, type Campaign } from "@/generated/prisma/client";
+import { firstIssue } from "@/lib/form-errors";
 
 export type DonateState =
-  | { step: "details"; error?: string; values?: DonateValues }
+  | { step: "details"; error?: string; field?: string; values?: DonateValues }
   | { step: "confirm"; values: DonateValues; amountCents: number; attemptId: string; error?: string };
 
 const successUrl = (sessionId: string) => `/donate/success?session_id=${encodeURIComponent(sessionId)}`;
@@ -52,7 +53,7 @@ async function enforceAccountEmail(values: DonateValues): Promise<DonateValues> 
 export async function reviewDonation(slug: string, _prev: DonateState, formData: FormData): Promise<DonateState> {
   const values = await enforceAccountEmail(valuesFromForm(formData));
   const parsed = parseDonationDetails(values);
-  if (!parsed.success) return { step: "details", error: parsed.error.issues[0].message, values };
+  if (!parsed.success) return { step: "details", ...firstIssue(parsed.error), values };
 
   const loaded = await loadOpenCampaign(slug);
   if ("error" in loaded) return { step: "details", error: loaded.error, values };
@@ -175,7 +176,7 @@ function checkoutDeps(
 export async function startCheckout(slug: string, _prev: DonateState, formData: FormData): Promise<DonateState> {
   const values = await enforceAccountEmail(valuesFromForm(formData));
   const parsed = parseDonationDetails(values);
-  if (!parsed.success) return { step: "details", error: parsed.error.issues[0].message, values };
+  if (!parsed.success) return { step: "details", ...firstIssue(parsed.error), values };
   const attempt = attemptIdSchema.safeParse(formData.get("attemptId"));
   if (!attempt.success) return { step: "details", error: "Please review your donation again.", values };
   const attemptId = attempt.data;
