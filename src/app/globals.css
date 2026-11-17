@@ -1,42 +1,333 @@
 @import "tailwindcss";
 
+/*
+ * Design system (see .claude/skills/ui-design-system/SKILL.md). Colours become Tailwind utilities
+ * (bg-navy, text-coral-text, border-line, ...) and CSS variables (var(--color-navy)).
+ */
+@theme {
+  --color-navy: #274078;
+  --color-navy-dark: #1e305c;
+  --color-coral: #e86044;
+  --color-coral-dark: #c94b31;
+  --color-coral-text: #b3381f;
+  --color-yellow: #f8ba17;
+  --color-seafoam: #c4dddd;
+  --color-cream: #f3f1ea;
+  --color-ink: #343740;
+  --color-muted: #5b6474;
+  --color-line: #e6e7e8;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fef2f2;
+  --color-success: #166534;
+  --color-success-bg: #dcfce7;
+  --color-info-bg: #dbeafe;
+}
+
+/* Fonts are loaded once in src/app/layout.tsx with next/font (variables --font-slab, --font-condensed, --font-lora). */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-lora), Georgia, serif;
+  --font-display: var(--font-slab), Georgia, serif;
+  --font-heading: var(--font-condensed), "Arial Narrow", sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-body {
-  background: #f8fafc;
-  color: #0f172a;
+:root {
+  /* Vertical padding of <main> (layout.tsx). Full-width pages cancel it with negative margins. */
+  --main-pad-y: 2rem;
 }
 
-/* Small shared building blocks */
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+/* Full-width sections (e.g. the /campaigns hero) are 100vw wide, which includes the scrollbar: no sideways scroll. */
+body:has([data-full-bleed]) {
+  overflow-x: clip;
+}
+
+/* Focus ring: navy on light backgrounds, yellow on navy areas (marked with .on-dark). */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.on-dark :focus-visible {
+  outline-color: var(--color-yellow);
+}
+
 @layer components {
-  .card {
-    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm;
+  /* ---------- Headings ---------- */
+  .page-title {
+    @apply font-heading text-navy uppercase;
+    font-weight: 700;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
   }
+  .section-title {
+    @apply font-heading text-navy uppercase;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+  }
+  .light {
+    font-weight: 400;
+  }
+  .heading {
+    @apply font-heading uppercase;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .stat-number {
+    @apply font-display text-coral;
+    line-height: 0.95;
+  }
+
+  /* ---------- Links ---------- */
+  .link {
+    @apply text-navy underline decoration-2 underline-offset-4 hover:decoration-coral;
+  }
+  /* Stand-alone links and text buttons: at least 44px tall to tap. (Links inside a sentence don't need it.) */
+  .tap {
+    @apply inline-flex min-h-11 items-center;
+  }
+
+  /* ---------- Cards ---------- */
+  .main-pad {
+    padding-block: var(--main-pad-y);
+  }
+  .card {
+    @apply bg-white p-5;
+    box-shadow: 0 1px 0 rgb(39 64 120 / 0.08), 0 0 0 1px rgb(39 64 120 / 0.04);
+  }
+
+  /* ---------- Buttons (chamfered; clip-path is dropped while focused so the ring shows) ---------- */
+  .btn,
+  .btn-sm,
+  .btn-secondary,
+  .btn-on-dark {
+    @apply font-heading inline-flex items-center justify-center gap-2 uppercase transition;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    min-height: 44px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  }
+  .btn:focus-visible,
+  .btn-sm:focus-visible,
+  .btn-secondary:focus-visible,
+  .btn-on-dark:focus-visible {
+    clip-path: none;
+    outline-offset: 3px;
+  }
+  /* Primary: 1.2rem bold is large text, so white on coral (3.4:1) passes. */
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply bg-coral px-8 py-2 text-white hover:-translate-y-0.5 hover:bg-coral-dark;
+    font-size: 1.2rem;
+  }
+  /* Smaller primary: below large-text size, so the darker coral (4.6:1). */
+  .btn-sm {
+    @apply bg-coral-dark px-5 py-1.5 text-white hover:bg-[#a83a22];
+    font-size: 1rem;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50;
+    @apply bg-white px-5 py-1.5 text-navy hover:bg-cream;
+    font-size: 1rem;
+    box-shadow: inset 0 0 0 2px var(--color-navy);
+  }
+  .btn-on-dark {
+    @apply px-5 py-1.5 text-white hover:bg-white hover:text-navy;
+    font-size: 1rem;
+    box-shadow: inset 0 0 0 2px #fff;
+  }
+  .btn:disabled,
+  .btn-sm:disabled,
+  .btn-secondary:disabled,
+  .btn-on-dark:disabled {
+    @apply cursor-not-allowed opacity-50 hover:translate-y-0;
+  }
+
+  /* ---------- Forms ---------- */
+  .label {
+    @apply font-heading text-navy mb-1 block uppercase;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
   }
   .input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20;
+    @apply border-muted text-ink w-full border-2 bg-white px-3 py-2 focus:border-navy;
+    font-size: 1rem;
+    min-height: 44px;
   }
-  .label {
-    @apply mb-1 block text-sm font-medium text-slate-700;
+  .input[aria-invalid="true"] {
+    @apply border-danger;
+  }
+  .help {
+    @apply text-muted mt-1 text-sm;
   }
   .error {
-    @apply rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800;
+    @apply border-danger bg-danger-bg text-danger border-l-4 px-3 py-2 text-sm;
   }
+
+  /* ---------- Badges (status always has a text label) ---------- */
+  .badge {
+    @apply font-heading inline-block px-2.5 py-0.5 uppercase;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  }
+  .badge-success {
+    @apply bg-success-bg text-success;
+  }
+  .badge-info {
+    @apply bg-info-bg text-navy;
+  }
+  .badge-danger {
+    @apply bg-danger-bg text-danger;
+  }
+  .badge-neutral {
+    @apply bg-line text-ink;
+  }
+  .badge-closed {
+    @apply bg-navy-dark text-white;
+  }
+
+  /* ---------- Tables ---------- */
   .table {
-    @apply w-full text-left text-sm;
+    @apply w-full text-left;
+    font-size: 0.95rem;
   }
   .table th {
-    @apply border-b border-slate-200 px-3 py-2 font-semibold text-slate-600;
+    @apply font-heading bg-seafoam text-navy uppercase;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.6rem 0.9rem;
   }
   .table td {
-    @apply border-b border-slate-100 px-3 py-2;
+    @apply border-line border-b;
+    padding: 0.6rem 0.9rem;
+  }
+  .table tbody tr:hover td {
+    @apply bg-cream;
+  }
+  .table .num {
+    @apply text-right whitespace-nowrap tabular-nums;
+  }
+}
+
+/* ---------- Shared pieces from the design system ---------- */
+@layer components {
+  /* Text link with a yellow arrow that nudges on hover. */
+  .arrow-link {
+    @apply font-heading text-navy inline-flex min-h-11 items-center gap-1.5 uppercase;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+  }
+  .arrow-link:hover {
+    @apply underline decoration-2 underline-offset-4;
+  }
+  .arrow-link .arrow {
+    @apply text-yellow transition-transform;
+  }
+  .arrow-link:hover .arrow,
+  .arrow-link:focus-visible .arrow {
+    transform: translate(3px, -3px);
+  }
+
+  /* Yellow "impact" chip: "R500 = 1 food parcel". */
+  .impact-chip {
+    @apply font-heading text-navy-dark self-start px-3 py-1 uppercase;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    background: rgb(248 186 23 / 0.22);
+  }
+
+  /* Yellow hatched stripe (under campaign images). */
+  .hatch-stripe {
+    height: 14px;
+    background:
+      linear-gradient(var(--color-yellow), var(--color-yellow)) bottom / 100% 5px no-repeat,
+      repeating-linear-gradient(115deg, var(--color-yellow) 0 3px, transparent 3px 10px) top / 100% 9px no-repeat;
+  }
+
+  /* Progress bar: sea-foam track, coral fill, chamfered. */
+  .progress-track {
+    @apply bg-seafoam h-3 w-full;
+    clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+  }
+  .progress-fill {
+    @apply bg-coral h-full;
+    transition: width 0.6s ease;
+  }
+
+  /* Campaign cards (home page and /campaigns). */
+  .campaign-grid {
+    @apply grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3;
+  }
+  .campaign-card {
+    @apply flex flex-col bg-white;
+    box-shadow: 0 1px 0 rgb(39 64 120 / 0.08);
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+  .campaign-card:hover,
+  .campaign-card:focus-within {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 36px -18px rgb(30 48 92 / 0.45);
+  }
+  .campaign-card-media {
+    @apply relative overflow-hidden;
+    clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);
+  }
+  .campaign-card-media img,
+  .campaign-card-media > div {
+    @apply h-48 w-full;
+    transition: transform 0.5s ease;
+  }
+  .campaign-card:hover .campaign-card-media img,
+  .campaign-card:hover .campaign-card-media > div {
+    transform: scale(1.06);
+  }
+}
+
+/* Cards rise in as they scroll into view (CSS only, and only when motion is welcome). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .campaign-card {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 40px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn-sm,
+  .btn-secondary,
+  .btn-on-dark,
+  .campaign-card,
+  .campaign-card-media img,
+  .campaign-card-media > div,
+  .arrow-link .arrow,
+  .progress-fill {
+    transition: none;
+    transform: none;
   }
 }

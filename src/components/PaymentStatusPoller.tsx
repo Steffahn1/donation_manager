@@ -26,15 +26,15 @@ export function PaymentStatusPoller() {
 
   if (tries >= MAX_TRIES) {
     return (
-      <p className="text-sm text-slate-600">
+      <p className="text-muted text-sm">
         This is taking longer than usual. You don&apos;t need to pay again. Please refresh this page in a minute
         to check the status.
       </p>
     );
   }
   return (
-    <p className="flex items-center gap-2 text-sm text-slate-600" role="status">
-      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+    <p className="flex items-center gap-2 text-muted text-sm" role="status">
+      <span className="border-coral inline-block size-4 rounded-full border-2 border-t-transparent motion-safe:animate-spin" aria-hidden="true" />
       Waiting for confirmation from the payment provider…
     </p>
   );

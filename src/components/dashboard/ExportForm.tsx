@@ -15,7 +15,7 @@ export function ExportForm({
 }) {
   const { from, to } = defaultRangeInputs(new Date());
   return (
-    <form action={action} method="GET" className="flex flex-wrap items-end gap-3 text-sm">
+    <form action={action} method="GET" className="flex flex-wrap items-end gap-3">
       {campaignId && <input type="hidden" name="campaign" value={campaignId} />}
       <div>
         <label className="label" htmlFor={`from-${campaignId ?? "all"}`}>From</label>
@@ -26,7 +26,7 @@ export function ExportForm({
         <input className="input" type="date" id={`to-${campaignId ?? "all"}`} name="to" defaultValue={to} required />
       </div>
       <button className="btn-secondary">{label}</button>
-      <p className="w-full text-xs text-slate-500">Paid donations only. Dates are Johannesburg days, both included.</p>
+      <p className="help w-full">Paid donations only. Dates are Johannesburg days, both included.</p>
     </form>
   );
 }

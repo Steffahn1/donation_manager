@@ -10,7 +10,7 @@ export default async function NewCampaignPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">New campaign</h1>
+      <h1 className="page-title">New campaign</h1>
       {managers.length === 0 ? (
         <p className="error">Create a campaign manager first — every campaign needs one.</p>
       ) : (

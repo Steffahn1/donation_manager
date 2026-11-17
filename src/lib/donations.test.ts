@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { attemptIdSchema, parseDonationDetails, valuesFromForm, type DonateValues } from "./donations";
+import { DONATION_INPUT_NAMES, attemptIdSchema, parseDonationDetails, valuesFromForm, type DonateValues } from "./donations";
+import { firstIssue } from "./form-errors";
 import { MAX_DONATION_CENTS, MIN_DONATION_CENTS } from "./money";
 
 const valid: DonateValues = { name: "Test Donor", email: "Donor@Example.test", amount: "250", anonymous: false };
@@ -34,6 +35,27 @@ describe("parseDonationDetails", () => {
     const r = parseDonationDetails({ ...valid, ...override });
     expect(r.success).toBe(false);
     expect(r.error?.issues[0].message).toContain(message);
+  });
+});
+
+describe("donate form errors point at the right input", () => {
+  // The form's inputs are named name, email, amount and anonymous (DonateForm.tsx).
+  const base: DonateValues = { name: "Test Donor", email: "donor@example.test", amount: "250", anonymous: false };
+  const fieldFor = (values: DonateValues) => {
+    const parsed = parseDonationDetails(values);
+    expect(parsed.success).toBe(false);
+    return parsed.success ? undefined : firstIssue(parsed.error, DONATION_INPUT_NAMES).field;
+  };
+
+  it("reports a bad, too small or too large amount on the 'amount' input", () => {
+    expect(fieldFor({ ...base, amount: "abc" })).toBe("amount");
+    expect(fieldFor({ ...base, amount: "0,50" })).toBe("amount");
+    expect(fieldFor({ ...base, amount: "99999999" })).toBe("amount");
+  });
+
+  it("reports name and email problems on those inputs", () => {
+    expect(fieldFor({ ...base, name: "A" })).toBe("name");
+    expect(fieldFor({ ...base, email: "not-an-email" })).toBe("email");
   });
 });
 

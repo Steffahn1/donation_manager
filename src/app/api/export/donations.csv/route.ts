@@ -1,8 +1,7 @@
-import { db } from "@/lib/db";
 import { getUserWithRole } from "@/lib/auth";
 import { parseDateRange, toCsv } from "@/lib/csv";
-import { STAFF_HEADER, campaignParam, csvFilename, staffExportWhere, staffRows } from "@/lib/exports";
-import { staffDonationSelect, toStaffDonation } from "@/lib/privacy";
+import { STAFF_HEADER, campaignParam, csvFilename, staffRows } from "@/lib/exports";
+import { staffExportDonations } from "@/lib/queries/staff";
 
 /**
  * Staff CSV of PAID donations: GET /api/export/donations.csv?from=YYYY-MM-DD&to=YYYY-MM-DD[&campaign=id]
@@ -19,13 +18,9 @@ export async function GET(request: Request) {
   const campaignId = campaignParam(url.searchParams.get("campaign"));
   if (campaignId === null) return new Response("Unknown campaign.", { status: 400 });
 
-  const rows = await db.donation.findMany({
-    where: staffExportWhere(auth.user, range, campaignId),
-    select: staffDonationSelect,
-    orderBy: [{ paidAt: "asc" }, { id: "asc" }],
-  });
+  const rows = await staffExportDonations(auth.user, range, campaignId);
 
-  return new Response(toCsv(STAFF_HEADER, staffRows(rows.map(toStaffDonation))), {
+  return new Response(toCsv(STAFF_HEADER, staffRows(rows)), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${csvFilename("donations", range)}"`,

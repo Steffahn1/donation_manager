@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CurrentUser } from "./auth";
-import { campaignScopeFor, isAcceptingDonations, notAcceptingReason, slugify, todayIso } from "./campaigns";
+import { campaignAvailability, campaignScopeFor, isAcceptingDonations, notAcceptingReason, slugify, todayIso } from "./campaigns";
 
 // Campaign dates are stored as Postgres DATE (midnight UTC).
 const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
@@ -68,5 +68,33 @@ describe("slugify", () => {
     expect(slugify("KZN Flood Relief 2026!")).toBe("kzn-flood-relief-2026");
     expect(slugify("Café & Crèche")).toBe("cafe-creche");
     expect(slugify("!!!")).toBe("");
+  });
+});
+
+describe("campaignAvailability", () => {
+  // 12:00 Johannesburg on 15 June 2026.
+  const now = new Date("2026-06-15T10:00:00Z");
+  const campaign = (status: "DRAFT" | "ACTIVE" | "CLOSED", start: string, end: string) => ({
+    status,
+    startDate: new Date(`${start}T00:00:00Z`),
+    endDate: new Date(`${end}T00:00:00Z`),
+  });
+
+  it("is open while ACTIVE and today is within the dates (both days included)", () => {
+    expect(campaignAvailability(campaign("ACTIVE", "2026-06-01", "2026-06-30"), now)).toBe("open");
+    expect(campaignAvailability(campaign("ACTIVE", "2026-06-15", "2026-06-15"), now)).toBe("open");
+  });
+
+  it("is upcoming, not closed, when an ACTIVE campaign starts in the future", () => {
+    expect(campaignAvailability(campaign("ACTIVE", "2026-06-16", "2026-07-31"), now)).toBe("upcoming");
+  });
+
+  it("is closed when CLOSED or past its end date", () => {
+    expect(campaignAvailability(campaign("CLOSED", "2026-06-01", "2026-06-30"), now)).toBe("closed");
+    expect(campaignAvailability(campaign("ACTIVE", "2026-05-01", "2026-06-14"), now)).toBe("closed");
+  });
+
+  it("is draft for a DRAFT campaign, even within its dates", () => {
+    expect(campaignAvailability(campaign("DRAFT", "2026-06-01", "2026-06-30"), now)).toBe("draft");
   });
 });

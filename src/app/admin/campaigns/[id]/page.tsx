@@ -11,7 +11,7 @@ export default async function EditCampaignPage({ params }: PageProps<"/admin/cam
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Edit campaign</h1>
+      <h1 className="page-title">Edit campaign</h1>
       <CampaignForm campaignId={id} initial={initial} managers={managers} />
     </div>
   );

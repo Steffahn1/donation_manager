@@ -1,0 +1,157 @@
+/*
+ * Page-only styles for /campaigns: the hero, the wavy dividers and the stats band. Shared pieces
+ * (buttons, campaign cards, progress bars) come from globals.css. Classes start with "cx-".
+ * (Not a CSS module: next.config.ts runs every *.css file through Tailwind as plain CSS.)
+ */
+
+.cx-page {
+  /* Full-bleed: break out of the layout's centred <main>: sideways to the window edges, and up/down by
+     <main>'s own padding (--main-pad-y, set in globals.css) so the hero touches the header. */
+  margin-block: calc(-1 * var(--main-pad-y));
+  margin-inline: calc(50% - 50vw);
+}
+
+.cx-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* ---------- Hero ---------- */
+
+.cx-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 100%, rgb(232 96 68 / 0.18), transparent 40%),
+    linear-gradient(160deg, var(--color-navy) 0%, var(--color-navy-dark) 100%);
+  color: #fff;
+  padding: 4.5rem 0 6.5rem;
+}
+
+.cx-kicker {
+  position: relative;
+  display: inline-block;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  line-height: 1;
+}
+
+.cx-swoosh {
+  position: absolute;
+  left: -4%;
+  bottom: -0.55em;
+  width: 108%;
+  height: 0.5em;
+  color: var(--color-coral);
+}
+
+.cx-headline {
+  margin-top: 1.5rem;
+  color: var(--color-yellow);
+  font-size: clamp(3rem, 9vw, 7rem);
+  max-width: 14ch;
+}
+
+.cx-lead {
+  margin-top: 1.5rem;
+  max-width: 36rem;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: rgb(255 255 255 / 0.88);
+}
+
+.cx-actions {
+  margin-top: 2.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* ---------- Wavy dividers ---------- */
+
+.cx-wave {
+  display: block;
+  width: 100%;
+  height: 48px;
+}
+
+.cx-waveIntoStats {
+  margin-top: -47px;
+  color: var(--color-seafoam);
+}
+
+.cx-waveOutOfStats {
+  color: var(--color-seafoam);
+  background: transparent;
+}
+
+/* ---------- Stats band ---------- */
+
+.cx-stats {
+  background: var(--color-seafoam);
+  padding: 2rem 0 2.5rem;
+}
+
+.cx-statGrid {
+  display: grid;
+  gap: 2.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .cx-statGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.cx-statValue {
+  /* --coral on seafoam is only 2.4:1; the darker coral is 4.2:1 (fine for these large numbers). */
+  color: var(--color-coral-text);
+  font-size: clamp(2.5rem, 5vw, 3.75rem);
+}
+
+.cx-statLabel {
+  margin-top: 0.75rem;
+  color: var(--color-navy);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+/* ---------- Campaign list ---------- */
+
+.cx-listSection {
+  /* Faint dotted background, like the inspiration's "Stories" section. */
+  background-color: #fff;
+  background-image: radial-gradient(rgb(68 173 255 / 0.16) 1.5px, transparent 1.5px);
+  background-size: 18px 18px;
+  padding: 3.5rem 0 5rem;
+}
+
+.cx-sectionTitle {
+  text-align: center;
+  color: var(--color-navy);
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  line-height: 1;
+}
+
+.cx-sectionTitle .light {
+  font-weight: 400;
+}
+
+.cx-sectionLead {
+  margin: 1rem auto 0;
+  max-width: 34rem;
+  text-align: center;
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+/* ---------- Loading placeholder (while the totals and list stream in) ---------- */
+
+.cx-loading {
+  background: var(--color-seafoam);
+  padding: 4rem 1rem;
+  text-align: center;
+  color: var(--color-navy);
+}

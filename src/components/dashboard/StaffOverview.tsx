@@ -10,9 +10,9 @@ import { LongTermChart } from "@/components/charts/LongTermChart";
 import { WeeklyChart } from "@/components/charts/WeeklyChart";
 
 const STATUS_STYLE = {
-  ACTIVE: "bg-emerald-100 text-emerald-800",
-  DRAFT: "bg-slate-100 text-slate-700",
-  CLOSED: "bg-amber-100 text-amber-800",
+  ACTIVE: "badge-success",
+  DRAFT: "badge-neutral",
+  CLOSED: "badge-closed",
 } as const;
 
 /** Dashboard for staff: a campaign manager's own campaigns, or every campaign for the super admin. */
@@ -35,8 +35,8 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">{isAdmin ? "All campaigns" : "Your campaigns"}</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="page-title">{isAdmin ? "All campaigns" : "Your campaigns"}</h1>
+        <p className="text-muted text-sm">
           Amounts are gross, before payment-provider fees. Only successful payments are counted.
         </p>
       </div>
@@ -59,25 +59,25 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
       {rows.length > 0 && (
         <section className="grid gap-6 lg:grid-cols-2" aria-label="Pacing">
           <div className="card space-y-2">
-            <h2 className="text-lg font-semibold">All {isAdmin ? "" : "your "}campaigns since the start</h2>
+            <h2 className="section-title">All {isAdmin ? "" : "your "}campaigns since the start</h2>
             <LongTermChart data={longTermSeries(rows, null, now)} />
           </div>
           <div className="card space-y-2">
-            <h2 className="text-lg font-semibold">Week by week</h2>
+            <h2 className="section-title">Week by week</h2>
             <WeeklyChart data={weeklySeries(rows, now)} />
           </div>
         </section>
       )}
 
       <section className="card space-y-3">
-        <h2 className="text-lg font-semibold">Export donations</h2>
+        <h2 className="section-title">Export donations</h2>
         <ExportForm action="/api/export/donations.csv" />
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Campaigns</h2>
+        <h2 className="section-title">Campaigns</h2>
         {campaigns.length === 0 ? (
-          <p className="card text-sm text-slate-600">
+          <p className="card text-muted text-sm">
             {isAdmin ? "No campaigns yet." : "No campaigns are assigned to you yet. Ask the super admin."}
           </p>
         ) : (
@@ -85,14 +85,14 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Campaign</th>
-                  <th>Status</th>
-                  {isAdmin && <th>Manager</th>}
-                  <th className="text-right">Raised / target</th>
-                  <th className="text-right">Donations</th>
-                  <th className="text-right">Donors</th>
-                  <th className="text-right">This week: new / returning</th>
-                  <th className="text-right">Failed</th>
+                  <th scope="col">Campaign</th>
+                  <th scope="col">Status</th>
+                  {isAdmin && <th scope="col">Manager</th>}
+                  <th scope="col" className="text-right">Raised / target</th>
+                  <th scope="col" className="text-right">Donations</th>
+                  <th scope="col" className="text-right">Donors</th>
+                  <th scope="col" className="text-right">This week: new / returning</th>
+                  <th scope="col" className="text-right">Failed</th>
                 </tr>
               </thead>
               <tbody>
@@ -102,23 +102,23 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
                   return (
                     <tr key={c.id}>
                       <td>
-                        <Link href={`/dashboard/campaigns/${c.id}`} className="font-medium text-emerald-700 underline">
+                        <Link href={`/dashboard/campaigns/${c.id}`} className="link tap font-semibold">
                           {c.name}
                         </Link>
                       </td>
                       <td>
-                        <span className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[c.status]}`}>{c.status}</span>
+                        <span className={`badge ${STATUS_STYLE[c.status]}`}>{c.status}</span>
                       </td>
                       {isAdmin && <td>{c.manager.name}</td>}
-                      <td className="whitespace-nowrap text-right">
-                        {formatZar(m.raisedCents)} / {formatZar(c.targetCents)} <span className="text-slate-500">({pct}%)</span>
+                      <td className="num">
+                        {formatZar(m.raisedCents)} / {formatZar(c.targetCents)} <span className="text-muted">({pct}%)</span>
                       </td>
-                      <td className="text-right">{m.donationCount}</td>
-                      <td className="text-right">{m.uniqueDonors}</td>
-                      <td className="text-right">
+                      <td className="num">{m.donationCount}</td>
+                      <td className="num">{m.uniqueDonors}</td>
+                      <td className="num">
                         {m.thisWeek.newDonors} / {m.thisWeek.returningDonors}
                       </td>
-                      <td className="text-right">{failed(c.id)}</td>
+                      <td className="num">{failed(c.id)}</td>
                     </tr>
                   );
                 })}
@@ -131,18 +131,18 @@ export async function StaffOverview({ user }: { user: CurrentUser }) {
       {isAdmin && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Campaign managers</h2>
-            <Link href="/admin/managers" className="text-sm text-emerald-700 underline">Manage</Link>
+            <h2 className="section-title">Campaign managers</h2>
+            <Link href="/admin/managers" className="link tap text-sm">Manage</Link>
           </div>
           <div className="card overflow-x-auto p-0">
             <table className="table">
-              <thead><tr><th>Name</th><th>Email</th><th className="text-right">Campaigns</th></tr></thead>
+              <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col" className="text-right">Campaigns</th></tr></thead>
               <tbody>
                 {managers.map((m) => (
                   <tr key={m.id}>
                     <td className="font-medium">{m.name}</td>
                     <td>{m.email}</td>
-                    <td className="text-right">{m._count.managedCampaigns}</td>
+                    <td className="num">{m._count.managedCampaigns}</td>
                   </tr>
                 ))}
               </tbody>

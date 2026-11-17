@@ -36,7 +36,8 @@ For each entry point, decide these three things:
 - Check that the roles passed are right for what the code does. Admin-only things need `SUPER_ADMIN`, and a
   campaign manager must not reach admin actions.
 - Some entry points are public on purpose. Each needs its own protection instead:
-  - `/`, `/campaigns`, `/campaigns/[slug]`: must show no donor names or emails, only ACTIVE campaigns, and
+  - `/`, `/campaigns`, `/campaigns/[slug]`: must show no donor names or emails, never DRAFT campaigns (CLOSED ones are
+    shown, marked closed and without a Donate button), and
     totals from SUCCEEDED donations only.
   - `/donate/*` and the donate action: guests may donate. They must never mark a donation paid, and the
     amount must be parsed on the server with `parseRandToCents`.

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { reviewDonation, startCheckout, type DonateState } from "@/app/actions/donate";
 import type { DonateValues } from "@/lib/donations";
 import { formatZar } from "@/lib/money";
+import { FORM_ERROR_ID, fieldErrorProps } from "@/lib/form-errors";
 
 const PRESETS = ["100", "250", "500", "1000"];
 
@@ -71,11 +72,11 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
         className="space-y-4"
         aria-labelledby="confirm-heading"
       >
-        <h2 id="confirm-heading" className="text-lg font-semibold">Please confirm your payment</h2>
-        {review.error && <p className="error" role="alert">{review.error}</p>}
-        <dl className="divide-y divide-slate-100 rounded-lg border border-slate-200 text-sm">
+        <h2 id="confirm-heading" className="section-title">Please confirm your payment</h2>
+        {review.error && <p id={FORM_ERROR_ID} className="error" role="alert">{review.error}</p>}
+        <dl className="divide-line border-line divide-y border bg-white">
           <Row label="Campaign" value={campaignName} />
-          <Row label="Amount" value={<span className="text-base font-bold">{formatZar(amountCents)}</span>} />
+          <Row label="Amount" value={<span className="font-display text-coral-text text-xl">{formatZar(amountCents)}</span>} />
           <Row label="Name" value={review.values.name} />
           <Row label="Email" value={review.values.email} />
           <Row
@@ -84,11 +85,11 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
           />
         </dl>
         {units > 0 && (
-          <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-            That pays for {units} × {impactLabel}.
+          <p className="impact-chip">
+            That pays for {units} × {impactLabel}
           </p>
         )}
-        <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="note">
+        <p className="border-coral-text bg-cream border-l-4 p-3 text-sm" role="note">
           <strong>Please check the amount before you continue.</strong> This is a once-off donation and
           accidental donations cannot be refunded.
         </p>
@@ -109,7 +110,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
             {pending ? "Opening secure payment…" : `Confirm and pay ${formatZar(amountCents)}`}
           </button>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-muted text-sm">
           You&apos;ll pay on Stripe&apos;s secure page. We never see or store your card details.
         </p>
       </form>
@@ -118,41 +119,40 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
 
   return (
     <form action={formAction} onSubmit={() => setEditing(false)} className="space-y-4">
-      {state.error && <p className="error" role="alert">{state.error}</p>}
+      {state.error && <p id={FORM_ERROR_ID} className="error" role="alert">{state.error}</p>}
       <input type="hidden" name="intent" value="review" />
+      <p className="text-muted text-sm">All fields are required.</p>
 
       <fieldset>
         <legend className="label">Amount (ZAR)</legend>
-        <div className="mb-2 grid grid-cols-4 gap-2">
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {PRESETS.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => setValues((v) => ({ ...v, amount: p }))}
               aria-pressed={values.amount === p}
-              className={`rounded-lg border px-2 py-2 text-sm font-semibold ${
-                values.amount === p
-                  ? "border-emerald-700 bg-emerald-700 text-white"
-                  : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
-              }`}
+              className={values.amount === p ? "btn-sm bg-navy hover:bg-navy-dark" : "btn-secondary"}
             >
               R{Number(p).toLocaleString("en-ZA")}
             </button>
           ))}
         </div>
-        <label className="sr-only" htmlFor="amount">Other amount in rand</label>
+        <label className="label" htmlFor="amount">Or type another amount</label>
         <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">R</span>
+          <span className="text-muted pointer-events-none absolute top-1/2 left-3 -translate-y-1/2" aria-hidden="true">R</span>
           <input
             className="input pl-7"
             id="amount"
             name="amount"
             inputMode="decimal"
+            {...fieldErrorProps(state, "amount", "amount-help")}
             required
             value={values.amount}
             onChange={(e) => setValues((v) => ({ ...v, amount: e.target.value }))}
           />
         </div>
+        <p id="amount-help" className="help">In rand, for example 250 or 250,50.</p>
       </fieldset>
 
       <div>
@@ -161,6 +161,7 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
           className="input"
           id="name"
           name="name"
+          {...fieldErrorProps(state, "name")}
           autoComplete="name"
           required
           value={values.name}
@@ -170,30 +171,35 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
       <div>
         <label className="label" htmlFor="email">Email (for your receipt)</label>
         <input
-          className="input read-only:bg-slate-100"
+          className="input read-only:bg-cream"
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           required
           readOnly={account !== null}
+          {...fieldErrorProps(state, "email", account ? "email-help" : undefined)}
           value={values.email}
           onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
         />
-        {account && <p className="mt-1 text-xs text-slate-500">Donations are saved to your account.</p>}
+        {account && (
+          <p id="email-help" className="help">
+            Donations are saved to your account.
+          </p>
+        )}
       </div>
 
-      <label className="flex items-start gap-2 text-sm">
+      <label className="flex items-start gap-3">
         <input
           type="checkbox"
           name="anonymous"
-          className="mt-1"
+          className="accent-navy mt-1.5 size-5"
           checked={values.anonymous}
           onChange={(e) => setValues((v) => ({ ...v, anonymous: e.target.checked }))}
         />
         <span>
-          Give anonymously
-          <span className="block text-xs text-slate-500">
+          <span className="heading text-navy">Give anonymously</span>
+          <span className="text-muted block text-sm">
             Charity staff will see &ldquo;Anonymous&rdquo; instead of your name and email.
           </span>
         </span>
@@ -208,8 +214,8 @@ export function DonateForm({ slug, campaignName, impactAmountCents, impactLabel,
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-4 px-3 py-2">
-      <dt className="text-slate-600">{label}</dt>
+    <div className="flex justify-between gap-4 px-3 py-2.5">
+      <dt className="text-muted">{label}</dt>
       <dd className="text-right font-medium">{value}</dd>
     </div>
   );

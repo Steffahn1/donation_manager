@@ -124,6 +124,31 @@
       (a payment completed after midnight counts on that last day, so the chart's running total
       always equals "Raised"), clearer `getUserWithRole`, end-of-day boundary tests (202 tests total)
 
+## Redesign: new visual design system (branch `campaigns-redesign`)
+- Inspired by a bold charity website: navy / coral / yellow palette, Alfa Slab One numbers, Barlow
+  Condensed uppercase headings, Lora reading text, chamfered buttons and badges, hatched stripe under
+  campaign images, wavy dividers, hover lift and CSS-only scroll-in motion (off with reduced motion).
+- `/campaigns` became the showcase page (hero, totals band, campaign cards). Then rolled out to every
+  page: tokens and shared classes in `globals.css`, fonts loaded once in the root layout, new
+  `CampaignCard` component (home page and `/campaigns`), restyled `ProgressBar`, `StatCard`, forms,
+  tables, badges and charts. Behaviour, data loading and privacy rules unchanged.
+- Rules live in the `/ui-design-system` skill (`.claude/skills/ui-design-system/SKILL.md`).
+- Accessibility: contrast checked for every colour pair (WCAG AA), visible focus ring on every control
+  (chamfered buttons drop their clip while focused), skip link, every input has a visible label and
+  linked help text, `scope="col"` table headers, named progress bars, no sideways scroll at 375px.
+- Also on this branch: `/access-review` (PASS), CSV export queries moved into `src/lib/queries/`.
+- Checked: typecheck, lint, 202 tests, production build; every page looked at in the browser as guest,
+  donor, campaign manager and super admin, at desktop and phone width.
+- Review fixes (reviewer: ready to push, 1 should-fix + 5 minor, all fixed): upcoming campaigns show
+  "Starts {date}" instead of "Closed" (`campaignAvailability`, tested); coral amounts on the donate page
+  sit on a white card; stand-alone links are 44px tall (`.tap`); `<main>` padding is a variable the
+  full-width page cancels; every form says which fields are required, server actions return the failing
+  field and inputs get `aria-invalid` (`src/lib/form-errors.ts`, tested); export queries tested with a
+  mocked database (masking, scoping, donor-only). Follow-up review fix: donate-form amount errors now
+  mark the "amount" input (the schema key is amountCents; mapped with DONATION_INPUT_NAMES). 220 tests.
+- Note: CSS modules don't work in this project (`next.config.ts` runs all CSS through Tailwind as plain
+  CSS); if styles stop updating in dev, delete `.next/dev` and restart.
+
 ## Known issues / notes
 - No rate limit on signup: someone could trigger many verification emails to one address.
 - Next.js dev logs "InvariantError: Received an underlying cookies object…" when a form is submitted
@@ -145,3 +170,6 @@
 - Dashboard metrics load successful donations into memory (fine for a small charity; move to SQL
   aggregation if volumes grow a lot).
 - ~~`getUserWithRole()` with no roles rejects everyone~~: fixed on Day 5 (shared `hasRole` rule).
+- Next.js dev logs "encountered uncached data during prerendering or a navigation" on several logged-in
+  and dynamic routes (`/dashboard`, `/admin/*`, `/campaigns/[slug]`, `/donate/[slug]`). Dev-only warning
+  from instant-navigation checks; pages render correctly. Not caused by the redesign.

@@ -1,34 +1,40 @@
 import { formatZar } from "@/lib/money";
 
-/** Gross raised vs target. Gross = before payment-provider fees. */
+/** Gross raised vs target (gross = before payment-provider fees). The percentage is always written as text too. */
 export function ProgressBar({
   raisedCents,
   targetCents,
+  label = "Raised towards target",
   showLabel = true,
 }: {
   raisedCents: number;
   targetCents: number;
+  /** Accessible name, e.g. "Winter Food Parcels: raised towards target". */
+  label?: string;
   showLabel?: boolean;
 }) {
   const pct = targetCents > 0 ? Math.round((raisedCents / targetCents) * 100) : 0;
+  const width = Math.min(pct, 100);
   return (
     <div>
-      <div
-        className="h-3 w-full overflow-hidden rounded-full bg-slate-200"
-        role="progressbar"
-        aria-valuenow={Math.min(pct, 100)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Raised towards target"
-      >
-        <div className="h-full rounded-full bg-emerald-600" style={{ width: `${Math.min(pct, 100)}%` }} />
-      </div>
       {showLabel && (
-        <p className="mt-1 text-sm text-slate-600">
-          <span className="font-semibold text-slate-900">{formatZar(raisedCents)}</span> raised of{" "}
-          {formatZar(targetCents)} · {pct}%
+        <p className="mb-2 flex flex-col">
+          <span className="stat-number text-[1.75rem]">{formatZar(raisedCents)}</span>
+          <span className="heading text-navy">
+            raised of {formatZar(targetCents)} · {pct}%
+          </span>
         </p>
       )}
+      <div
+        className="progress-track"
+        role="progressbar"
+        aria-valuenow={width}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label}
+      >
+        <div className="progress-fill" style={{ width: `${width}%` }} />
+      </div>
     </div>
   );
 }

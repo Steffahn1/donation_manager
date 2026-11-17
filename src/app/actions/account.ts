@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSession } from "@/lib/auth";
 import { confirmVerification, handleSignup } from "@/lib/verification";
+import { firstIssue } from "@/lib/form-errors";
 
-export type AccountFormState = { error?: string } | undefined;
+/** `field` is the input the error is about, for aria-invalid. */
+export type AccountFormState = { error?: string; field?: string } | undefined;
 
 const signupSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address.")).pipe(z.string().max(254)),
@@ -19,7 +21,7 @@ const signupSchema = z.object({
  */
 export async function signup(_prev: AccountFormState, formData: FormData): Promise<AccountFormState> {
   const parsed = signupSchema.safeParse({ email: formData.get("email") });
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return firstIssue(parsed.error);
   const { email } = parsed.data;
   after(() => handleSignup(email));
   redirect("/signup/check-email");
@@ -36,7 +38,7 @@ const confirmSchema = z.object({
  */
 export async function confirmEmail(_prev: AccountFormState, formData: FormData): Promise<AccountFormState> {
   const parsed = confirmSchema.safeParse({ name: formData.get("name"), password: formData.get("password") });
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return firstIssue(parsed.error);
 
   const result = await confirmVerification(formData.get("token"), parsed.data);
   if (!result.ok) {
