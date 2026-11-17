@@ -144,7 +144,8 @@
   sit on a white card; stand-alone links are 44px tall (`.tap`); `<main>` padding is a variable the
   full-width page cancels; every form says which fields are required, server actions return the failing
   field and inputs get `aria-invalid` (`src/lib/form-errors.ts`, tested); export queries tested with a
-  mocked database (masking, scoping, donor-only). 217 tests.
+  mocked database (masking, scoping, donor-only). Follow-up review fix: donate-form amount errors now
+  mark the "amount" input (the schema key is amountCents; mapped with DONATION_INPUT_NAMES). 220 tests.
 - Note: CSS modules don't work in this project (`next.config.ts` runs all CSS through Tailwind as plain
   CSS); if styles stop updating in dev, delete `.next/dev` and restart.
 

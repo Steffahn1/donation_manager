@@ -14,7 +14,7 @@ import {
   type CheckoutOutcome,
   type SessionInfo,
 } from "@/lib/checkout-flow";
-import { attemptIdSchema, parseDonationDetails, valuesFromForm, type DonateValues, type DonationDetails } from "@/lib/donations";
+import { DONATION_INPUT_NAMES, attemptIdSchema, parseDonationDetails, valuesFromForm, type DonateValues, type DonationDetails } from "@/lib/donations";
 import {
   classifyCreateError,
   createCheckoutSession,
@@ -53,7 +53,7 @@ async function enforceAccountEmail(values: DonateValues): Promise<DonateValues> 
 export async function reviewDonation(slug: string, _prev: DonateState, formData: FormData): Promise<DonateState> {
   const values = await enforceAccountEmail(valuesFromForm(formData));
   const parsed = parseDonationDetails(values);
-  if (!parsed.success) return { step: "details", ...firstIssue(parsed.error), values };
+  if (!parsed.success) return { step: "details", ...firstIssue(parsed.error, DONATION_INPUT_NAMES), values };
 
   const loaded = await loadOpenCampaign(slug);
   if ("error" in loaded) return { step: "details", error: loaded.error, values };
@@ -176,7 +176,7 @@ function checkoutDeps(
 export async function startCheckout(slug: string, _prev: DonateState, formData: FormData): Promise<DonateState> {
   const values = await enforceAccountEmail(valuesFromForm(formData));
   const parsed = parseDonationDetails(values);
-  if (!parsed.success) return { step: "details", ...firstIssue(parsed.error), values };
+  if (!parsed.success) return { step: "details", ...firstIssue(parsed.error, DONATION_INPUT_NAMES), values };
   const attempt = attemptIdSchema.safeParse(formData.get("attemptId"));
   if (!attempt.success) return { step: "details", error: "Please review your donation again.", values };
   const attemptId = attempt.data;

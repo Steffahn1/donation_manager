@@ -14,7 +14,17 @@ describe("firstIssue", () => {
   it("has no field for a whole-form rule", () => {
     const whole = z.object({ a: z.string() }).refine(() => false, { message: "Whole form is wrong." });
     const parsed = whole.safeParse({ a: "x" });
+    expect(parsed.success).toBe(false);
     if (!parsed.success) expect(firstIssue(parsed.error)).toEqual({ error: "Whole form is wrong.", field: undefined });
+  });
+});
+
+describe("firstIssue with renamed inputs", () => {
+  it("reports the form's input name, not the schema key", () => {
+    const schema = z.object({ amountCents: z.string().min(1, "Enter an amount.") });
+    const parsed = schema.safeParse({ amountCents: "" });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) expect(firstIssue(parsed.error, { amountCents: "amount" }).field).toBe("amount");
   });
 });
 

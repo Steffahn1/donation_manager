@@ -7,11 +7,19 @@ import type { ZodError } from "zod";
 
 export const FORM_ERROR_ID = "form-error";
 
-/** The first validation problem: its message for the form, and the field it belongs to (if any). */
-export function firstIssue(error: ZodError): { error: string; field?: string } {
+/**
+ * The first validation problem: its message for the form, and the input it belongs to (if any).
+ * `inputNames` maps schema keys that differ from the form's input names (e.g. amountCents -> amount),
+ * so the field always matches the name passed to fieldErrorProps.
+ */
+export function firstIssue(
+  error: ZodError,
+  inputNames: Record<string, string> = {},
+): { error: string; field?: string } {
   const issue = error.issues[0];
   const key = issue?.path[0];
-  return { error: issue?.message ?? "Please check the form.", field: typeof key === "string" ? key : undefined };
+  const field = typeof key === "string" ? (inputNames[key] ?? key) : undefined;
+  return { error: issue?.message ?? "Please check the form.", field };
 }
 
 /**

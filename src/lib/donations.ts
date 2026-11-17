@@ -36,6 +36,9 @@ export function valuesFromForm(formData: FormData): DonateValues {
   };
 }
 
+/** Schema keys that differ from the donate form's input names (for firstIssue / aria-invalid). */
+export const DONATION_INPUT_NAMES = { amountCents: "amount" } as const;
+
 export function parseDonationDetails(values: DonateValues) {
   return donationDetailsSchema.safeParse({
     name: values.name,
