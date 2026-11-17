@@ -1,7 +1,7 @@
-import { db } from "@/lib/db";
 import { getUserWithRole } from "@/lib/auth";
 import { parseDateRange, toCsv } from "@/lib/csv";
-import { DONOR_HEADER, csvFilename, donorExportWhere, donorRows } from "@/lib/exports";
+import { DONOR_HEADER, csvFilename, donorRows } from "@/lib/exports";
+import { donorExportDonations } from "@/lib/queries/donor";
 
 /** A donor's own PAID donations: GET /api/export/my-donations.csv?from=YYYY-MM-DD&to=YYYY-MM-DD */
 export async function GET(request: Request) {
@@ -13,15 +13,7 @@ export async function GET(request: Request) {
   const range = parseDateRange(url.searchParams.get("from"), url.searchParams.get("to"), new Date());
   if ("error" in range) return new Response(range.error, { status: 400 });
 
-  // Only through Donor.userId, which is set when the email is confirmed (see verification-rules.ts).
-  const donor = await db.donor.findUnique({ where: { userId: auth.user.id }, select: { id: true } });
-  const rows = donor
-    ? await db.donation.findMany({
-        where: donorExportWhere(donor.id, range),
-        select: { paidAt: true, createdAt: true, amountCents: true, isAnonymous: true, donorName: true, campaign: { select: { name: true } } },
-        orderBy: [{ paidAt: "asc" }, { id: "asc" }],
-      })
-    : [];
+  const rows = await donorExportDonations(auth.user, range);
 
   return new Response(toCsv(DONOR_HEADER, donorRows(rows)), {
     headers: {

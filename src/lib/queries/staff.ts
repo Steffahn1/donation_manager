@@ -4,6 +4,8 @@ import type { CurrentUser } from "@/lib/auth";
 import { campaignScopeFor } from "@/lib/campaigns";
 import { staffDonationSelect, toStaffDonation, type StaffDonation } from "@/lib/privacy";
 import type { MetricDonation } from "@/lib/metrics";
+import type { DateRange } from "@/lib/csv";
+import { staffExportWhere } from "@/lib/exports";
 
 /**
  * Queries for staff dashboards. Every query is scoped with campaignScopeFor(user): a campaign
@@ -73,4 +75,21 @@ export async function staffDonations(
     db.donation.count({ where }),
   ]);
   return { rows: rows.map(toStaffDonation), total };
+}
+
+/**
+ * Paid donations for the staff CSV export, oldest first, already masked by toStaffDonation.
+ * Scoped by staffExportWhere (campaignScopeFor): another manager's campaign id gives no rows.
+ */
+export async function staffExportDonations(
+  user: CurrentUser,
+  range: DateRange,
+  campaignId?: string,
+): Promise<StaffDonation[]> {
+  const rows = await db.donation.findMany({
+    where: staffExportWhere(user, range, campaignId),
+    select: staffDonationSelect,
+    orderBy: [{ paidAt: "asc" }, { id: "asc" }],
+  });
+  return rows.map(toStaffDonation);
 }
