@@ -1,6 +1,12 @@
 # Progress
 
-All work below is merged into `main` (pull requests #1–#7). Newest work is at the bottom; known issues at the end.
+A day-by-day log of what was built, how it was checked and what is still open. Everything below is
+merged into `main` (pull requests #1–#7).
+
+**At a glance:** all five days of the brief are done, plus a visual redesign and documentation work.
+220 unit tests; the payment flow was tested end to end with real Stripe test-mode webhooks; every role
+was clicked through in the browser at desktop and phone width. Open items are under
+[Known issues](#known-issues--notes) at the end.
 
 ## Day 1: Foundation
 - [x] Next.js 16 + TypeScript + Tailwind scaffold; Docker Compose for Postgres and Mailpit
@@ -17,7 +23,7 @@ All work below is merged into `main` (pull requests #1–#7). Newest work is at 
 - [x] Success page (read-only, polls for the webhook), cancelled page with "Try again"
 - [x] Placeholder campaign images (re-seed to use them)
 - [x] 9 unit tests for webhook logic; typecheck, lint and build pass
-- [ ] End-to-end test with a real database and the Stripe CLI (not available yet on this machine)
+- [x] End-to-end test with a real database and the Stripe CLI: done on Day 5 (see "Real Stripe end-to-end test")
 
 ## Day 2 review fixes
 - [x] Amount parsing accepts the South African decimal comma ("250,50" was read as R25 050)
@@ -81,8 +87,8 @@ All work below is merged into `main` (pull requests #1–#7). Newest work is at 
 - [x] Checked against the database + Mailpit (2026-11-14): signup (new, existing and invalid), unverified
       dashboard, confirm link (opening it changes nothing; works once), linked history and totals,
       reveal (only own anonymous gifts, one-way), receipt sent once and page contents. Test data removed.
-- [ ] Not yet clicked through in a browser; the receipt has not been triggered by a real Stripe
-      webhook (no Stripe CLI on this machine)
+- [x] Clicked through in a browser during the redesign; the receipt was triggered by a real Stripe
+      webhook in the Day 5 end-to-end test
 
 ## Day 4 review fixes
 - [x] Confirming locks the account before using up the link, the same order as deleting an account
@@ -116,8 +122,9 @@ All work below is merged into `main` (pull requests #1–#7). Newest work is at 
       - back to the form after the decline and confirming again: no second donation, no second
         payment page (the open page was reused)
       - "Try again": Stripe page expired (checked at Stripe); donation stayed FAILED; browser key cleared
-- [ ] Not tested by hand: a deliberate double-click on "Confirm and pay" (covered by unit tests)
-- [ ] Click-through in a browser of the dashboards, including how the charts look
+- [x] Double-click on "Confirm and pay" tested by hand (2026-11-18): one donation, one Stripe payment
+      page, browser went to Stripe (also covered by unit tests)
+- [x] Dashboards and charts clicked through in a browser (during the redesign, every role)
 - Note: the two Stripe test donations used a real email address. Both, and that donor record, were
   deleted from the dev database and Mailpit afterwards (the Stripe sandbox keeps its own test data:
   Dashboard → Developers → "Delete all test data").
@@ -152,19 +159,22 @@ All work below is merged into `main` (pull requests #1–#7). Newest work is at 
   CSS); if styles stop updating in dev, delete `.next/dev` and restart.
 
 ## Documentation and onboarding
-- README rewritten for first-time readers: prerequisites (Node 20.9+, Docker, Stripe only for
+- README rewritten for first-time readers: prerequisites (Node 22.12+, Docker, Stripe only for
   payments), step-by-step setup, what works without Stripe keys, demo logins and test cards up front,
   screenshots, a design and accessibility section and a "How this was built" section.
 - A fresh clone now works by following the README: `npm install` generates the Prisma client
-  (`postinstall`); it was gitignored and nothing created it, so `npm run dev` failed on a new machine.
-  `engines` and `.nvmrc` pin Node; `npm run typecheck` runs `next typegen` first so it also works on a
+  (`postinstall`; `prisma` is a regular dependency so this also works in production installs); it was
+  gitignored and nothing created it, so `npm run dev` failed on a new machine. `engines` requires
+  Node 22.12+ (what Prisma 7 and vitest need) and `.nvmrc` pins 24; `npm run typecheck` runs `next typegen` first so it also works on a
   fresh clone. Tested by cloning the GitHub repo into an empty folder and following the README.
+
+- README restructured after a senior-developer-style review: "For reviewers: start here", key
+  decisions near the top, detailed behaviour moved to `docs/ARCHITECTURE.md`, how accessibility was
+  checked, "How this was built" focused on my decisions; reviewer agent renamed to `code-reviewer`;
+  unused Stripe publishable key removed from `.env.example`; screenshots retaken from a production build.
 
 ## Known issues / notes
 - No rate limit on signup: someone could trigger many verification emails to one address.
-- Next.js dev logs "InvariantError: Received an underlying cookies object…" when a form is submitted
-  WITHOUT JavaScript and the action returns an error message (e.g. wrong password). The page and the
-  error message still render correctly; normal (JavaScript) submissions don't take this path.
 - Tokens in URLs (`/verify-email?token=…`, `/receipt/<token>`) can show up in hosting access logs.
 - A receipt whose email failed is not retried (best effort, by decision); its link is lost.
 - Blocked staff pages (another manager's campaign, or a donor opening a staff page) return HTTP 200
@@ -174,13 +184,19 @@ All work below is merged into `main` (pull requests #1–#7). Newest work is at 
 - Expired sessions are rejected but never deleted from the database.
 - Several declines on one Checkout page keep only the latest failure reason.
 - A donation whose payment page could never be opened (Stripe unreachable) stays PENDING with no
-  session id. It is never counted. Day 3 staff views AND Day 4 donor history must filter out PENDING
-  rows without a session id (they are not real payments).
+  session id. It is never counted: staff views only list paid and declined donations, and donor
+  history hides PENDING rows without a payment page (`visibleDonations` in `src/lib/donor-summary.ts`).
 - "Newest page wins" is per browser: a donor using two different browsers can still have two open
   payment pages for the same campaign. Both would be deliberate confirm steps.
 - Dashboard metrics load successful donations into memory (fine for a small charity; move to SQL
   aggregation if volumes grow a lot).
-- ~~`getUserWithRole()` with no roles rejects everyone~~: fixed on Day 5 (shared `hasRole` rule).
-- Next.js dev logs "encountered uncached data during prerendering or a navigation" on several logged-in
-  and dynamic routes (`/dashboard`, `/admin/*`, `/campaigns/[slug]`, `/donate/[slug]`). Dev-only warning
-  from instant-navigation checks; pages render correctly. Not caused by the redesign.
+
+### Development-only warnings (`npm run dev`, not in production builds)
+These come from Next.js 16's development checks; pages and data are correct, and `npm run build` passes.
+- "encountered uncached data during prerendering or a navigation" on logged-in and dynamic routes
+  (`/dashboard`, `/admin/*`, `/campaigns/[slug]`, `/donate/[slug]`): these pages read the database or
+  the session per request, which the dev check flags as "not instantly navigable". Fix later by moving
+  each page's data loading inside its own `<Suspense>` boundary.
+- "InvariantError: Received an underlying cookies object…" only when a form is submitted with
+  JavaScript turned off and the action returns an error (e.g. wrong password); the page and message
+  still render. Normal submissions don't take this path.
