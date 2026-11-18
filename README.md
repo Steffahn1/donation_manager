@@ -1,9 +1,15 @@
 # Donation Manager
 
-Donation management for a small charity: public campaign pages, once-off card donations through
-Stripe (test mode), donor accounts with receipts, and staff dashboards with funder reporting.
-Currency is ZAR only. Built for the "Payments and people" brief; the brief's **funder** is a donor
-here. The full plan is in [docs/PLAN.md](docs/PLAN.md) and progress in [docs/PROGRESS.md](docs/PROGRESS.md).
+A donation platform for a small South African charity: public campaign pages, once-off card
+donations through Stripe (test mode), donor accounts with email receipts, and staff dashboards with
+charts and CSV reports. Currency is ZAR only.
+
+Built as a 5-day assessment for the **"Payments and people"** brief: take card payments safely
+(no double charges, failed payments handled, card details never touched), give each kind of user
+the right view of the data, and protect donor privacy. In the brief a "funder" is a donor here.
+How it was planned and built: [docs/PLAN.md](docs/PLAN.md) and [docs/PROGRESS.md](docs/PROGRESS.md).
+
+![Campaign cards](docs/screenshots/campaign-cards.jpg)
 
 ## Who uses it
 
@@ -16,27 +22,80 @@ here. The full plan is in [docs/PLAN.md](docs/PLAN.md) and progress in [docs/PRO
 
 ## Running locally
 
+### Prerequisites
+
+- **Node.js 20.9 or newer** (developed on Node 24; `.nvmrc` included)
+- **Docker** with Docker Compose (runs Postgres and Mailpit, a local inbox that catches every email)
+- **Only to take payments:** a free [Stripe account](https://dashboard.stripe.com/register) (test mode
+  is enough, no business details needed) and the [Stripe CLI](https://docs.stripe.com/stripe-cli)
+
+### 1. Set up and start
+
 ```bash
-cp .env.example .env            # then fill in the Stripe test keys
+git clone https://github.com/Steffahn1/donation_manager.git
+cd donation_manager
+cp .env.example .env            # works as-is for everything except payments
 docker compose up -d            # Postgres + Mailpit (inbox at http://localhost:8025)
-npm install
-npx prisma migrate dev          # creates the tables
-npx prisma db seed              # demo users, campaigns and six weeks of donations (wipes the DB!)
+npm install                     # also generates the Prisma client
+npx prisma migrate deploy       # creates the tables
+npx prisma db seed              # demo users, 5 campaigns and six weeks of donations (wipes the DB!)
 npm run dev                     # http://localhost:3000
 ```
 
-In a second terminal, forward Stripe webhooks to the app (needs the [Stripe CLI](https://docs.stripe.com/stripe-cli)):
+### 2. Log in with the demo accounts
+
+All seeded data is made up.
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Super admin | `admin@charity.local` | `ChangeMe123!` |
+| Campaign manager | `thandi@charity.local` (2 campaigns) or `johan@charity.local` (3 campaigns) | `Manager123!` |
+| Donor | `donor@example.com` | `Donor123!` |
+
+**Without Stripe keys** you can already try almost everything: browse campaigns, log in as each role,
+the dashboards, charts and CSV exports, and the donor signup (open the confirmation email in Mailpit
+at http://localhost:8025). Only the final "pay" step needs Stripe.
+
+### 3. Turn on payments (optional)
+
+1. In the Stripe dashboard (test mode), copy your test keys from
+   [API keys](https://dashboard.stripe.com/test/apikeys) into `.env`: `STRIPE_SECRET_KEY` (`sk_test_…`)
+   and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (`pk_test_…`).
+2. In a second terminal, forward Stripe's webhooks to the app:
+
+   ```bash
+   stripe login
+   stripe listen --forward-to localhost:3000/api/webhooks/stripe
+   ```
+
+   Copy the `whsec_…` it prints into `STRIPE_WEBHOOK_SECRET` in `.env`, then restart `npm run dev`.
+   Keep `stripe listen` running: without it, payments stay on "Processing" because the app never hears
+   back from Stripe.
+3. Donate on any open campaign with a test card. Use any future expiry date (e.g. `12/34`), any CVC and
+   any postcode:
+
+| Card | Result |
+| --- | --- |
+| `4242 4242 4242 4242` | Paid |
+| `4000 0025 0000 3155` | Asks for 3-D Secure (click **Complete**), then paid |
+| `4000 0000 0000 0002` | Declined |
+| `4000 0000 0000 9995` | Declined: insufficient funds |
+
+Worth trying: pay with the declined card, then `4242…` on the same page (it stays one donation); an
+amount with a decimal comma like `250,50`; and the receipt email in Mailpit after paying.
+
+### Checks
 
 ```bash
-stripe login
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
-# copy the printed whsec_... into STRIPE_WEBHOOK_SECRET in .env and restart `npm run dev`
+npm test             # unit tests (payment, privacy, metrics, exports, forms)
+npm run typecheck
+npm run lint
+npm run build
 ```
 
-Demo logins (from the seed): `admin@charity.local` / `ChangeMe123!`,
-`thandi@charity.local` / `Manager123!`, `donor@example.com` / `Donor123!`.
+### Resetting the demo
 
-Checks: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+`npx prisma db seed` wipes the database and recreates the demo data at any time.
 
 ## How a donation is paid
 
@@ -156,13 +215,41 @@ links donations made from the same browser, so it is kept only while a payment p
 open: the webhook clears it when a payment completes or a page expires, and anything older than
 70 minutes is cleared on the next checkout. Staff screens never show it.
 
-Test cards: `4242 4242 4242 4242` (succeeds), `4000 0000 0000 0002` (declined),
-`4000 0000 0000 9995` (insufficient funds). Any future expiry date and any CVC.
+## Design and accessibility
+
+![Staff dashboard](docs/screenshots/staff-dashboard.jpg)
+
+- One design system for every page: navy, coral and yellow; slab numbers, condensed uppercase headings
+  and Lora for reading; cut-corner buttons; subtle hover and scroll motion that switches off for users
+  who prefer reduced motion. Colours and shared styles live in `src/app/globals.css`.
+- Accessibility (WCAG 2.2 AA): every colour pair checked for contrast, a visible focus ring on every
+  control, a skip link, visible labels with linked help text on every input, errors announced and
+  linked to the field they are about, table headers marked up, named progress bars, 44px touch
+  targets, and no sideways scrolling at phone width.
+
+![Charts](docs/screenshots/staff-charts.jpg)
+
+## How this was built
+
+Built with [Claude Code](https://claude.com/claude-code) as a pair programmer, in a
+plan → approve → build → review loop:
+
+- **Plan first:** each day started with a written plan (`docs/PLAN.md`) that I approved before any code.
+- **Project rules** in `CLAUDE.md`: money in cents, only the webhook marks a donation paid, anonymous
+  donors masked on the server, made-up data only, and so on.
+- **Independent review:** a reviewer agent (`.claude/agents/steffahns-code-reviewer.md`) reviewed each
+  day's work; its findings were fixed and re-reviewed before merging (pull requests #1–#7).
+- **Project skills** (`.claude/skills/`), reusable checklists:
+  - `/access-review`: audits every page, action and route for role checks, campaign scoping and anonymous masking
+  - `/test-payment-flow`: guided run through the Stripe test cards, checking the database and Mailpit after each
+  - `/ui-design-system`: the design and accessibility rules every page follows
+  - `/demo-reset`: wipes and reseeds the local demo, then prints logins and test cards
 
 ## Limitations
 
-- The payment flow was tested end to end with real Stripe test-mode webhooks (see docs/PROGRESS.md),
-  but the dashboards and charts have not yet been checked visually in a browser.
+- Tested with unit tests, real Stripe test-mode payments and webhooks, and by hand in the browser for
+  every role at desktop and phone width (see docs/PROGRESS.md). There are no automated browser
+  (end-to-end) tests or database integration tests yet.
 - No rate limiting (signup emails, login attempts).
 - Anyone with database access can read donor details; there is no column encryption.
 - Tokens in URLs (`/verify-email?token=…`, `/receipt/<token>`) can appear in hosting access logs.

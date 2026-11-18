@@ -1,6 +1,8 @@
 # Progress
 
-## Day 1: Foundation (committed: 21e3862)
+All work below is merged into `main` (pull requests #1–#7). Newest work is at the bottom; known issues at the end.
+
+## Day 1: Foundation
 - [x] Next.js 16 + TypeScript + Tailwind scaffold; Docker Compose for Postgres and Mailpit
 - [x] Prisma schema, init migration, seed (admin, 2 managers, 5 campaigns, 40 donors, 6 weeks of donations)
 - [x] DB-backed sessions, bcrypt passwords, `requireRole`, proxy redirect
@@ -8,7 +10,7 @@
 - [x] Public campaign list and detail pages
 - [x] Super admin: create/edit campaigns, assign managers, create manager accounts
 
-## Day 2: Stripe payments (committed)
+## Day 2: Stripe payments
 - [x] Donate form with confirm step and non-refundable warning (`/donate/[slug]`)
 - [x] Stripe Checkout Session with attempt-id idempotency key (migration `checkout_attempt`)
 - [x] Webhook: completed / payment failed / expired, replay-safe via StripeEvent, forward-only status
@@ -17,7 +19,7 @@
 - [x] 9 unit tests for webhook logic; typecheck, lint and build pass
 - [ ] End-to-end test with a real database and the Stripe CLI (not available yet on this machine)
 
-## Review fixes (after Day 2, not committed yet)
+## Day 2 review fixes
 - [x] Amount parsing accepts the South African decimal comma ("250,50" was read as R25 050)
 - [x] Double payments: a donation keeps one payment page (reused after a decline); per browser and
       campaign only the newest OPEN page stays payable (random `dm_browser` cookie set at the review
@@ -37,7 +39,7 @@
       webhook (96 tests)
 - Migration `donor_name_receipt_hash` (also adds `browserKeyHash`): run `npx prisma migrate dev`, then re-seed
 
-## Day 3: Staff dashboards (merged in pull request #2)
+## Day 3: Staff dashboards
 - [x] Shared metrics in src/lib/metrics.ts (pure, unit tested): gross raised, donations, unique and
       repeat donors, this week vs last week, new vs returning (per campaign), 28-day daily series for
       the Day 5 chart. Johannesburg days, weeks start Monday. Only SUCCEEDED counts. Each anonymous
@@ -55,7 +57,7 @@
       with no data; anonymous gifts show as "Anonymous" and no anonymous donor's email or id
       appears in the page or its RSC payload
 
-## Day 4: Donors (merged in pull request #3)
+## Day 4: Donors
 - [x] Donor dashboard: history (attempts that never reached Stripe hidden), campaign progress, total
       given, impact per campaign, "Show my name" on anonymous gifts (one-way, with a confirmation; a
       named gift can never be made anonymous afterwards)
@@ -82,7 +84,7 @@
 - [ ] Not yet clicked through in a browser; the receipt has not been triggered by a real Stripe
       webhook (no Stripe CLI on this machine)
 
-## Day 4 review fixes (branch `day-4-review-fixes`)
+## Day 4 review fixes
 - [x] Confirming locks the account before using up the link, the same order as deleting an account
       ("Add manager", cleanup), so the two can't deadlock; a signup for an account deleted meanwhile is
       skipped quietly
@@ -90,7 +92,7 @@
 - [x] 160 tests; typecheck and lint pass. Not re-run live (dev server was stopped); the same lock query
       already ran live in signup
 
-## Day 5: Reporting and polish (branch `day-5-reporting`, pushed for a pull request)
+## Day 5: Reporting and polish
 - [x] CSV exports with a date range, paid donations only: staff (`/api/export/donations.csv`, scoped
       with `campaignScopeFor`, anonymous donors masked, empty file for another manager's campaign) and
       donors (`/api/export/my-donations.csv`, own donations). Formula-injection safe, BOM + CRLF,
@@ -124,7 +126,7 @@
       (a payment completed after midnight counts on that last day, so the chart's running total
       always equals "Raised"), clearer `getUserWithRole`, end-of-day boundary tests (202 tests total)
 
-## Redesign: new visual design system (branch `campaigns-redesign`)
+## Redesign: new visual design system
 - Inspired by a bold charity website: navy / coral / yellow palette, Alfa Slab One numbers, Barlow
   Condensed uppercase headings, Lora reading text, chamfered buttons and badges, hatched stripe under
   campaign images, wavy dividers, hover lift and CSS-only scroll-in motion (off with reduced motion).
@@ -148,6 +150,15 @@
   mark the "amount" input (the schema key is amountCents; mapped with DONATION_INPUT_NAMES). 220 tests.
 - Note: CSS modules don't work in this project (`next.config.ts` runs all CSS through Tailwind as plain
   CSS); if styles stop updating in dev, delete `.next/dev` and restart.
+
+## Documentation and onboarding
+- README rewritten for first-time readers: prerequisites (Node 20.9+, Docker, Stripe only for
+  payments), step-by-step setup, what works without Stripe keys, demo logins and test cards up front,
+  screenshots, a design and accessibility section and a "How this was built" section.
+- A fresh clone now works by following the README: `npm install` generates the Prisma client
+  (`postinstall`); it was gitignored and nothing created it, so `npm run dev` failed on a new machine.
+  `engines` and `.nvmrc` pin Node; `npm run typecheck` runs `next typegen` first so it also works on a
+  fresh clone. Tested by cloning the GitHub repo into an empty folder and following the README.
 
 ## Known issues / notes
 - No rate limit on signup: someone could trigger many verification emails to one address.
