@@ -1,7 +1,8 @@
 # Donation Manager — Plan
 
 Living plan for the project. Status per day is tracked in [PROGRESS.md](PROGRESS.md); rules for working
-on the code are in [CLAUDE.md](../CLAUDE.md). Last updated 2026-11-14 (after Day 3).
+on the code are in [CLAUDE.md](../CLAUDE.md). Last updated 2026-11-18: all five days done and merged, plus a
+visual redesign; how the code works today is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Context
 5-day assessment project ("Payments and people" brief): donation management for a small charity running
@@ -27,7 +28,7 @@ into polish (see Build order).
 - **Campaign manager (CM):** sees only the campaigns assigned to them. Each campaign has exactly one CM;
   a CM can have many campaigns.
 - **Donor:** gives as a guest or with an account (email + password). The brief's "funder" means a donor
-  (to be noted in the README).
+  (noted in the README).
 
 ### Campaigns
 - Fields: name, description, target in ZAR, start/end date, status (draft/active/closed), image and
@@ -146,7 +147,7 @@ Dev only: Mailpit (in Docker) via nodemailer, for receipts and verification link
 
 ## Technical approach
 - **Infra:** `docker-compose.yml` with Postgres and Mailpit. `.env` (not committed) holds `DATABASE_URL`,
-  `STRIPE_SECRET_KEY` (must be `sk_test_`), `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`,
+  `STRIPE_SECRET_KEY` (must be `sk_test_`), `STRIPE_WEBHOOK_SECRET`,
   `SMTP_*`, `EMAIL_FROM`, `APP_URL`; `.env.example` lists them without real values.
 - **ORM:** Prisma 7 with the pg adapter; generated client in `src/generated/prisma` (never edited).
 - **Auth:** custom database-backed sessions (httpOnly cookie, only the token hash stored), bcrypt

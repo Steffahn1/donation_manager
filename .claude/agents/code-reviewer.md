@@ -1,5 +1,5 @@
 ---
-name: steffahns-code-reviewer
+name: code-reviewer
 description: Reviews code changes before they are pushed. Use after a feature is finished, or when asked to review changes. Reports problems; never edits files.
 tools: Read, Grep, Glob, Bash
 ---
