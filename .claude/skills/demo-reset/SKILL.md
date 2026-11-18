@@ -38,3 +38,36 @@ Run from the project root. Stop at the first step that fails, show the error and
    - Reminder: for payments to complete, run
      `stripe listen --forward-to localhost:3000/api/webhooks/stripe` in another terminal.
    - Old emails in Mailpit now point at deleted data; the user can clear the inbox in the Mailpit UI.
+
+7. **Test card data.** Always end the report with this section, exactly as below (it's printed in the terminal
+   so the user can test payments straight away). These are Stripe's public TEST card numbers: they only work in
+   test mode and are not real card details.
+
+   ### Test cards for the payment page (Stripe test mode)
+
+   For every card: **any future expiry** (e.g. `12/34`), **any 3-digit CVC**, any postcode.
+   Use made-up donor details, e.g. name `Test Donor`, email `test.donor@example.test`.
+
+   **Pays successfully**
+   | Card | What happens |
+   |---|---|
+   | `4242 4242 4242 4242` | Visa, paid immediately (use this for the demo) |
+   | `5555 5555 5555 4444` | Mastercard, paid immediately |
+   | `4000 0025 0000 3155` | 3-D Secure: click **Complete** on the test screen, then paid |
+
+   **Declined** (donation becomes FAILED, never counted in totals)
+   | Card | What happens |
+   |---|---|
+   | `4000 0000 0000 0002` | Generic decline |
+   | `4000 0000 0000 9995` | Insufficient funds |
+   | `4000 0000 0000 0069` | Expired card |
+   | `4000 0000 0000 0127` | Incorrect CVC |
+   | `4000 0084 0000 1629` | 3-D Secure passes, then declined |
+
+   **Worth trying**
+   - Decline, then retry: pay with `…0002`, then enter `4242…` on the same page. The same donation goes from
+     FAILED to SUCCEEDED (one donation, not two).
+   - Amount with a decimal comma, e.g. `250,50`, shows as R250,50 on the confirm step.
+   - After a successful payment the receipt email appears in Mailpit (http://localhost:8025).
+   - Without `stripe listen` running, payments stay on "Processing".
+   - For a guided run that checks the database and Mailpit after each card, use `/test-payment-flow`.
