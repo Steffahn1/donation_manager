@@ -37,7 +37,7 @@ view of the data, and protect donor privacy. The brief's "funders" are called do
 - **Accounts can't be pre-hijacked:** no password until the inbox owner confirms; confirming ends other
   sessions; signup and login take the same time whether or not an account exists.
 - **Pure, tested core logic** (payments, webhooks, privacy, metrics, exports) with the database and
-  Stripe passed in; pages and routes are thin wrappers. 235 unit tests.
+  Stripe passed in; pages and routes are thin wrappers. 236 unit tests.
 
 ## Who uses it
 
@@ -117,7 +117,7 @@ amount with a decimal comma like `250,50`; and the receipt email in Mailpit afte
 ### Checks
 
 ```bash
-npm test             # 235 unit tests (payments, webhooks, privacy, metrics, exports, forms, articles)
+npm test             # 236 unit tests (payments, webhooks, privacy, metrics, exports, forms, articles)
 npm run typecheck
 npm run lint
 npm run build

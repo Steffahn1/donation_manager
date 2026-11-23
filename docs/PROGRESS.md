@@ -4,7 +4,7 @@ A day-by-day log of what was built, how it was checked and what is still open. E
 merged into `main` (pull requests #1–#7).
 
 **At a glance:** all five days of the brief are done, plus a visual redesign and documentation work.
-235 unit tests; the payment flow was tested end to end with real Stripe test-mode webhooks; every role
+236 unit tests; the payment flow was tested end to end with real Stripe test-mode webhooks; every role
 was clicked through in the browser at desktop and phone width. Open items are under
 [Known issues](#known-issues--notes) at the end.
 
@@ -193,8 +193,10 @@ was clicked through in the browser at desktop and phone width. Open items are un
   moved to `src/lib/campaign-form.ts` with tests for the article limit and the echoed values; the
   donate page and payment action no longer load the article; each seed slug is written once
   (`slugAndStory`); "danger on white" added to the design system's contrast table.
+- Third review fixes: after a failed save, keyboard focus moves to the field with the problem (or
+  the error message), and the character counter counts line breaks once for an untouched article.
 - Future work: images inside articles (needs image upload first).
-- Checked: typecheck, lint, 235 tests, build; every campaign page at desktop, 375px and 320px width
+- Checked: typecheck, lint, 236 tests, build; every campaign page at desktop, 375px and 320px width
   with no sideways scroll; headings in order (one h1, then h2s).
 
 ## Known issues / notes

@@ -53,4 +53,10 @@ describe("submittedCampaignValues", () => {
     expect(values).not.toHaveProperty("secret");
     expect(Object.keys(values)).toEqual(Object.keys(valid));
   });
+
+  it("echoes the article with \\n line breaks, so the form's counter counts each once", () => {
+    const form = new FormData();
+    form.set("story", "## The need\r\n\r\nWinter is hard.\rReally.");
+    expect(submittedCampaignValues(form).story).toBe("## The need\n\nWinter is hard.\nReally.");
+  });
 });

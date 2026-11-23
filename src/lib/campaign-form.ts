@@ -53,12 +53,16 @@ const CAMPAIGN_FIELDS = [
   "imagePath", "impactAmount", "impactLabel", "managerId",
 ] as const;
 
-/** The campaign form's text fields (missing ones as ""), so they can be validated and echoed back. */
+/**
+ * The campaign form's text fields (missing ones as ""), so they can be validated and echoed back.
+ * Line breaks become "\n": browsers send "\r\n", and the echoed article must count the same as
+ * what the admin typed (the form's character counter).
+ */
 export function submittedCampaignValues(formData: FormData): Record<string, string> {
   return Object.fromEntries(
     CAMPAIGN_FIELDS.map((k) => {
       const v = formData.get(k);
-      return [k, typeof v === "string" ? v : ""];
+      return [k, typeof v === "string" ? v.replace(/\r\n?/g, "\n") : ""];
     }),
   );
 }

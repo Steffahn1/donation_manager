@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { saveCampaign } from "@/app/actions/admin";
 import { FORM_ERROR_ID, fieldErrorProps } from "@/lib/form-errors";
-import { MAX_STORY_LENGTH } from "@/lib/story";
+import { MAX_STORY_LENGTH, normaliseStory } from "@/lib/story";
 
 export type CampaignFormValues = {
   name: string;
@@ -30,6 +30,15 @@ export function CampaignForm({
 }) {
   const [state, action, pending] = useActionState(saveCampaign.bind(null, campaignId), undefined);
   const [storyLength, setStoryLength] = useState<number | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // After a failed save the form is rebuilt (see the key below), which drops keyboard focus. Move it to
+  // the field the error is about, or to the error message, so keyboard users don't start from the top.
+  useEffect(() => {
+    if (!state?.error) return;
+    const field = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    (field ?? document.getElementById(FORM_ERROR_ID))?.focus();
+  }, [state]);
   // After a failed save React resets the form. Text fields would pick up the new defaultValues, but a
   // <select> only reads defaultValue when it mounts, so remount the whole form (key) with what was
   // submitted: otherwise Status and Manager would silently jump back to their original values.
@@ -43,8 +52,8 @@ export function CampaignForm({
     : initial;
 
   return (
-    <form key={submitted ? JSON.stringify(submitted) : "initial"} action={action} className="card space-y-4">
-      {state?.error && <p id={FORM_ERROR_ID} className="error" role="alert">{state.error}</p>}
+    <form ref={formRef} key={submitted ? JSON.stringify(submitted) : "initial"} action={action} className="card space-y-4">
+      {state?.error && <p id={FORM_ERROR_ID} className="error" role="alert" tabIndex={-1}>{state.error}</p>}
       <p className="text-muted text-sm">All fields are required unless marked optional.</p>
       <div>
         <label className="label" htmlFor="name">Name</label>
@@ -61,7 +70,7 @@ export function CampaignForm({
           id="story"
           name="story"
           defaultValue={v.story}
-          onChange={(e) => setStoryLength(e.target.value.trim().length)}
+          onChange={(e) => setStoryLength(normaliseStory(e.target.value).length)}
           {...fieldErrorProps(state, "story", "story-help story-count")}
         />
         <div id="story-help" className="help space-y-1">
@@ -75,7 +84,7 @@ export function CampaignForm({
           </ul>
           <p>At most {MAX_STORY_LENGTH.toLocaleString("en-ZA")} characters. Images inside articles are not supported yet.</p>
         </div>
-        <StoryCount length={storyLength ?? v.story.trim().length} />
+        <StoryCount length={storyLength ?? normaliseStory(v.story).length} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
