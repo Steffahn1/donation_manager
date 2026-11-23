@@ -50,3 +50,7 @@ next-env.d.ts
 .claude/skills/prisma-*
 .windsurf/
 skills-lock.json
+
+# Understand Anything plugin output (knowledge graph): kept local for now
+.ua/
+.understand-anything/

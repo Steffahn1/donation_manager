@@ -1,0 +1,22 @@
+# Files the Understand Anything plugin (/understand) must never analyse.
+# Same syntax as .gitignore. The plugin already skips node_modules/, .next/, lock files and images.
+
+# Secrets: never analysed, so they can't end up in the knowledge graph (.ua/)
+.env
+.env.*
+!.env.example
+
+# Generated code (Prisma client): large and not useful to analyse
+src/generated/
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# Third-party skill docs installed locally (not project code)
+.agents/
+.claude/skills/prisma-*
+.windsurf/
+skills-lock.json
+
+# The plugin's own output
+.ua/
