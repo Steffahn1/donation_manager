@@ -14,10 +14,13 @@ these rules. If a page needs something not covered here, ask the user and then a
   `font-heading`, `font-sans` = Lora, …) and the shared classes: `page-title`, `section-title`, `light`, `heading`,
   `stat-number`, `link`, `arrow-link` (+ `.arrow`), `card`, `btn`, `btn-sm`, `btn-secondary`, `btn-on-dark`,
   `label`, `input`, `help`, `error`, `badge` + `badge-success|info|danger|neutral|closed`, `table` (+ `.num` cells),
-  `impact-chip`, `hatch-stripe`, `progress-track`/`progress-fill`, `campaign-grid`, `campaign-card`.
+  `impact-chip`, `hatch-stripe`, `progress-track`/`progress-fill`, `campaign-grid`, `campaign-card`,
+  `story` (long-form campaign article: 68ch reading width, condensed navy h2/h3, navy list markers,
+  quotes as navy italic on cream with a coral edge).
   `.on-dark` on a navy area switches focus rings to yellow.
 - `src/app/layout.tsx`: loads the fonts once, navy header with skip link, navy-dark footer.
-- Components: `CampaignCard`, `ProgressBar` (pass `label` with the campaign name), `StatCard`, `CampaignImage`.
+- Components: `CampaignCard`, `ProgressBar` (pass `label` with the campaign name), `StatCard`, `CampaignImage`,
+  `CampaignStory` (renders an article from `src/lib/story.ts` blocks; its headings start at h2).
 - `src/app/campaigns/campaigns.css`: page-only pieces of the showcase page (hero, wavy dividers, stats band), prefixed `cx-`.
 
 ## 0. How to apply it in this codebase

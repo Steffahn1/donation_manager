@@ -20,6 +20,7 @@ export async function raisedByCampaign(campaignIds: string[]) {
 export async function getPublicCampaigns() {
   const campaigns = await db.campaign.findMany({
     where: { status: { in: ["ACTIVE", "CLOSED"] } },
+    omit: { story: true }, // the long article is only needed on the campaign's own page
     orderBy: [{ status: "asc" }, { endDate: "asc" }],
   });
   const totals = await raisedByCampaign(campaigns.map((c) => c.id));

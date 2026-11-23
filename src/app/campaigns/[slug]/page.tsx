@@ -5,6 +5,7 @@ import { campaignAvailability, notAcceptingReason } from "@/lib/campaigns";
 import { formatZar } from "@/lib/money";
 import { ProgressBar } from "@/components/ProgressBar";
 import { CampaignImage } from "@/components/CampaignImage";
+import { CampaignStory } from "@/components/CampaignStory";
 
 const dateFmt = new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeZone: "UTC" });
 
@@ -18,7 +19,7 @@ export default async function CampaignPage({ params }: PageProps<"/campaigns/[sl
 
   return (
     <article className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-      <div className="space-y-5">
+      <div className="min-w-0 space-y-5">
         <div>
           <div className="campaign-card-media">
             <CampaignImage src={campaign.imagePath} alt={campaign.name} className="h-72 w-full" />
@@ -31,8 +32,9 @@ export default async function CampaignPage({ params }: PageProps<"/campaigns/[sl
         </div>
         <h1 className="page-title">{campaign.name}</h1>
         <p className="text-lg leading-relaxed whitespace-pre-line">{campaign.description}</p>
+        <CampaignStory story={campaign.story} campaignName={campaign.name} />
       </div>
-      <aside className="card h-fit space-y-4" aria-label="Donate to this campaign">
+      <aside className="card h-fit space-y-4 lg:sticky lg:top-6" aria-label="Donate to this campaign">
         <ProgressBar
           raisedCents={campaign.raisedCents}
           targetCents={campaign.targetCents}

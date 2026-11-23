@@ -17,6 +17,7 @@ import { staffExportWhere } from "@/lib/exports";
 export function listStaffCampaigns(user: CurrentUser) {
   return db.campaign.findMany({
     where: campaignScopeFor(user),
+    omit: { story: true }, // staff pages don't show the public article
     include: { manager: { select: { name: true } } },
     orderBy: [{ status: "asc" }, { endDate: "asc" }],
   });
@@ -26,6 +27,7 @@ export function listStaffCampaigns(user: CurrentUser) {
 export function getStaffCampaign(user: CurrentUser, campaignId: string) {
   return db.campaign.findFirst({
     where: { id: campaignId, ...campaignScopeFor(user) },
+    omit: { story: true },
     include: { manager: { select: { name: true } } },
   });
 }

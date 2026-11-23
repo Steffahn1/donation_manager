@@ -37,7 +37,7 @@ view of the data, and protect donor privacy. The brief's "funders" are called do
 - **Accounts can't be pre-hijacked:** no password until the inbox owner confirms; confirming ends other
   sessions; signup and login take the same time whether or not an account exists.
 - **Pure, tested core logic** (payments, webhooks, privacy, metrics, exports) with the database and
-  Stripe passed in; pages and routes are thin wrappers. 220 unit tests.
+  Stripe passed in; pages and routes are thin wrappers. 231 unit tests.
 
 ## Who uses it
 
@@ -46,7 +46,7 @@ view of the data, and protect donor privacy. The brief's "funders" are called do
 | Visitor / guest donor | Browse campaigns, donate without an account, get a receipt link by email |
 | Donor (account) | See their own donations, impact and campaign progress, reveal their name on an anonymous gift, download their donations |
 | Campaign manager | See dashboards for **their own** campaigns only: progress, donors (anonymous ones masked), failed attempts, charts, CSV export |
-| Super admin | Everything a manager sees for **all** campaigns, plus create/edit campaigns and manager accounts |
+| Super admin | Everything a manager sees for **all** campaigns, plus create/edit campaigns (including each campaign's "Learn more" article) and manager accounts |
 
 ## Running locally
 
@@ -117,7 +117,7 @@ amount with a decimal comma like `250,50`; and the receipt email in Mailpit afte
 ### Checks
 
 ```bash
-npm test             # 220 unit tests (payments, webhooks, privacy, metrics, exports, forms)
+npm test             # 231 unit tests (payments, webhooks, privacy, metrics, exports, forms, articles)
 npm run typecheck
 npm run lint
 npm run build
@@ -211,6 +211,6 @@ run), [`/ui-design-system`](.claude/skills/ui-design-system/SKILL.md) and
 
 ## Future work
 
-Recurring donations, campaign image upload, a retry queue for emails, rate limiting, column encryption
+Recurring donations, campaign image upload, images inside campaign articles, a retry queue for emails, rate limiting, column encryption
 for donor details, 404/redirect status codes for blocked pages, deleting expired sessions, and
 database-level integration tests for the query filters.

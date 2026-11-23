@@ -4,7 +4,7 @@ A day-by-day log of what was built, how it was checked and what is still open. E
 merged into `main` (pull requests #1–#7).
 
 **At a glance:** all five days of the brief are done, plus a visual redesign and documentation work.
-220 unit tests; the payment flow was tested end to end with real Stripe test-mode webhooks; every role
+231 unit tests; the payment flow was tested end to end with real Stripe test-mode webhooks; every role
 was clicked through in the browser at desktop and phone width. Open items are under
 [Known issues](#known-issues--notes) at the end.
 
@@ -172,6 +172,24 @@ was clicked through in the browser at desktop and phone width. Open items are un
   decisions near the top, detailed behaviour moved to `docs/ARCHITECTURE.md`, how accessibility was
   checked, "How this was built" focused on my decisions; reviewer agent renamed to `code-reviewer`;
   unused Stripe publishable key removed from `.env.example`; screenshots retaken from a production build.
+
+## Campaign articles ("Learn more" pages)
+- New optional `Campaign.story` column (migration `20261123120000_campaign_story`): a long-form article
+  per campaign, shown on its public page under the description. The donate box stays in view (sticky)
+  on wide screens while reading.
+- Written by the super admin in the campaign form ("Article for the Learn more page"), with simple
+  formatting (headings, paragraphs, bullet and numbered lists, quotes, bold) explained under the field.
+  Rendered safely from parsed blocks (`src/lib/story.ts`, unit-tested), never as raw HTML.
+- The campaign form now keeps what was typed when saving fails, so a long article isn't lost.
+- Made-up articles for all five demo campaigns in `prisma/seed-stories.ts` (structure based on
+  common advice for charity campaign pages). Re-seed (`/demo-reset`) to load them.
+- Review fixes: the article box states its 20 000-character limit and shows a character counter (a
+  longer article is refused with a message, never cut off; line breaks count once on both sides);
+  a `###` before the first `##` becomes `##` so headings never skip a level; campaign lists no longer
+  load the article; seed article slugs are type-checked; Flood Relief copy mentions card fees.
+- Future work: images inside articles (needs image upload first).
+- Checked: typecheck, lint, 231 tests, build; every campaign page at desktop, 375px and 320px width
+  with no sideways scroll; headings in order (one h1, then h2s).
 
 ## Known issues / notes
 - No rate limit on signup: someone could trigger many verification emails to one address.

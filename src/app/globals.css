@@ -246,6 +246,57 @@ body:has([data-full-bleed]) {
     background: rgb(248 186 23 / 0.22);
   }
 
+  /* Campaign article ("Learn more" page), rendered from src/lib/story.ts blocks. Reading width ~68ch. */
+  .story {
+    @apply space-y-4;
+    max-width: 68ch;
+    overflow-wrap: anywhere;
+    font-size: 1.075rem;
+    line-height: 1.7;
+  }
+  .story h2 {
+    @apply font-heading text-navy uppercase;
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    padding-top: 1rem;
+  }
+  .story h2:first-child {
+    padding-top: 0;
+  }
+  .story h3 {
+    @apply font-heading text-navy uppercase;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.02em;
+  }
+  .story strong {
+    @apply text-navy-dark;
+    font-weight: 700;
+  }
+  .story ul,
+  .story ol {
+    @apply space-y-2 pl-6;
+  }
+  .story ul {
+    list-style: square;
+  }
+  .story ol {
+    list-style: decimal;
+  }
+  .story li::marker {
+    @apply font-heading;
+    color: var(--color-navy);
+    font-weight: 700;
+  }
+  /* Quote: navy text on cream with a coral edge (navy on cream 8.9:1). */
+  .story blockquote {
+    @apply bg-cream text-navy border-coral border-l-4 px-5 py-4;
+    font-style: italic;
+    font-size: 1.15rem;
+  }
+
   /* Yellow hatched stripe (under campaign images). */
   .hatch-stripe {
     height: 14px;

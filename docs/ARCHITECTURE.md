@@ -16,6 +16,7 @@ payments, donor accounts, reporting and privacy. Rules the code must never break
 | Dashboard numbers and charts | `src/lib/metrics.ts` |
 | Signup, email confirmation, login | `src/lib/verification*.ts`, `src/lib/login.ts` |
 | Receipts and CSV exports | `src/lib/receipts.ts`, `src/lib/exports.ts`, `src/lib/csv.ts` |
+| Campaign articles ("Learn more" pages) | `src/lib/story.ts` (formatting), `src/components/CampaignStory.tsx` |
 | Database queries (server only) | `src/lib/queries/` |
 | Schema, migrations, demo data | `prisma/` |
 
@@ -106,6 +107,23 @@ server gracefully (SIGTERM) so pending emails still go out.
   - donors: `/api/export/my-donations.csv?from=…&to=…`, their own donations only
   - anonymous donors appear as "Anonymous" with no email; cells that could run as spreadsheet
     formulas are neutralised; 401 when logged out, 403 for the wrong role
+
+## Campaign articles ("Learn more")
+
+- Each campaign can have an optional long-form article (`Campaign.story`), shown under the short
+  description on its public page `/campaigns/[slug]`. The super admin writes it in the campaign
+  form (new campaign and edit campaign pages); campaign managers can't edit campaigns.
+- It is plain text with simple formatting: `## Heading` (`###` smaller), blank line = new paragraph,
+  `- item` bullets, `1. step` numbered lists, `> quote`, `**bold**`. `parseStory` in `src/lib/story.ts`
+  turns it into blocks and the page renders them as React elements, so the text is always escaped:
+  no HTML, scripts or links can be injected. Headings never skip a level (a `###` before the first
+  `##` is shown as `##`). At most 20 000 characters, with line breaks counted once, as in the form's
+  character counter; a longer article is refused with a message, never cut short.
+- If saving the form fails validation, the admin's text (including the article) is kept in the form.
+- The seed writes a made-up article for each demo campaign (`prisma/seed-stories.ts`), structured
+  like real charity appeal pages: the need, why now, what a gift does in rand, how the help reaches
+  people, one voice from the community, and how donors are kept informed.
+- Not yet: images inside articles (future work, together with image upload).
 
 ## Privacy
 
