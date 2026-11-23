@@ -9,7 +9,7 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, type DonationStatus } from "../src/generated/prisma/client";
-import { CAMPAIGN_STORIES } from "./seed-stories";
+import { slugAndStory } from "./seed-stories";
 
 const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -69,8 +69,7 @@ async function main() {
   const campaigns = await Promise.all([
     db.campaign.create({
       data: {
-        slug: "winter-food-parcels",
-        story: CAMPAIGN_STORIES["winter-food-parcels"],
+        ...slugAndStory("winter-food-parcels"),
         name: "Winter Food Parcels",
         description: "Food parcels for families in Khayelitsha through the winter months. Each parcel feeds a family of four for a week.",
         targetCents: 150_000_00,
@@ -85,8 +84,7 @@ async function main() {
     }),
     db.campaign.create({
       data: {
-        slug: "school-shoes",
-        story: CAMPAIGN_STORIES["school-shoes"],
+        ...slugAndStory("school-shoes"),
         name: "School Shoes for Every Child",
         description: "A new pair of school shoes for learners at partner primary schools in Soweto.",
         targetCents: 60_000_00,
@@ -101,8 +99,7 @@ async function main() {
     }),
     db.campaign.create({
       data: {
-        slug: "clean-water-tanks",
-        story: CAMPAIGN_STORIES["clean-water-tanks"],
+        ...slugAndStory("clean-water-tanks"),
         name: "Clean Water Tanks",
         description: "Rainwater harvesting tanks for rural households in the Eastern Cape.",
         targetCents: 200_000_00,
@@ -117,8 +114,7 @@ async function main() {
     }),
     db.campaign.create({
       data: {
-        slug: "library-books",
-        story: CAMPAIGN_STORIES["library-books"],
+        ...slugAndStory("library-books"),
         name: "Community Library Books",
         description: "Stocking a new community library in Mamelodi. Launching soon.",
         targetCents: 40_000_00,
@@ -133,8 +129,7 @@ async function main() {
     }),
     db.campaign.create({
       data: {
-        slug: "flood-relief-2026",
-        story: CAMPAIGN_STORIES["flood-relief-2026"],
+        ...slugAndStory("flood-relief-2026"),
         name: "KZN Flood Relief",
         description: "Emergency relief for families affected by flooding. This campaign has closed — thank you!",
         targetCents: 80_000_00,

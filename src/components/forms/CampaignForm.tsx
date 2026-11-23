@@ -30,7 +30,9 @@ export function CampaignForm({
 }) {
   const [state, action, pending] = useActionState(saveCampaign.bind(null, campaignId), undefined);
   const [storyLength, setStoryLength] = useState<number | null>(null);
-  // After a failed save React resets the form to its default values, so show what was submitted.
+  // After a failed save React resets the form. Text fields would pick up the new defaultValues, but a
+  // <select> only reads defaultValue when it mounts, so remount the whole form (key) with what was
+  // submitted: otherwise Status and Manager would silently jump back to their original values.
   const submitted = state?.values;
   const v: CampaignFormValues = submitted
     ? {
@@ -41,7 +43,7 @@ export function CampaignForm({
     : initial;
 
   return (
-    <form action={action} className="card space-y-4">
+    <form key={submitted ? JSON.stringify(submitted) : "initial"} action={action} className="card space-y-4">
       {state?.error && <p id={FORM_ERROR_ID} className="error" role="alert">{state.error}</p>}
       <p className="text-muted text-sm">All fields are required unless marked optional.</p>
       <div>

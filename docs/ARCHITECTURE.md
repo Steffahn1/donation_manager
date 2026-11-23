@@ -119,10 +119,15 @@ server gracefully (SIGTERM) so pending emails still go out.
   no HTML, scripts or links can be injected. Headings never skip a level (a `###` before the first
   `##` is shown as `##`). At most 20 000 characters, with line breaks counted once, as in the form's
   character counter; a longer article is refused with a message, never cut short.
-- If saving the form fails validation, the admin's text (including the article) is kept in the form.
+- If saving the form fails, everything the admin entered is kept: the text fields (including the
+  article) and the Status and Campaign manager choices. The form is rebuilt from the submitted
+  values (a `<select>` would otherwise jump back to its original value after React's form reset).
+- The donate page and the payment action load the campaign without its article; only the campaign's
+  own page (`getPublicCampaignPageBySlug`) and the admin edit form read it.
 - The seed writes a made-up article for each demo campaign (`prisma/seed-stories.ts`), structured
   like real charity appeal pages: the need, why now, what a gift does in rand, how the help reaches
   people, one voice from the community, and how donors are kept informed.
+- Validation lives in `src/lib/campaign-form.ts` (unit-tested), used by the `saveCampaign` action.
 - Not yet: images inside articles (future work, together with image upload).
 
 ## Privacy

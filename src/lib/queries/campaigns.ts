@@ -27,7 +27,16 @@ export async function getPublicCampaigns() {
   return campaigns.map((c) => ({ ...c, ...totals(c.id) }));
 }
 
+/** A public (non-draft) campaign with its totals, without the long article (e.g. the donate page). */
 export async function getPublicCampaignBySlug(slug: string) {
+  const campaign = await db.campaign.findUnique({ where: { slug }, omit: { story: true } });
+  if (!campaign || campaign.status === "DRAFT") return null;
+  const totals = await raisedByCampaign([campaign.id]);
+  return { ...campaign, ...totals(campaign.id) };
+}
+
+/** The same, plus the campaign's article: only for its own "Learn more" page. */
+export async function getPublicCampaignPageBySlug(slug: string) {
   const campaign = await db.campaign.findUnique({ where: { slug } });
   if (!campaign || campaign.status === "DRAFT") return null;
   const totals = await raisedByCampaign([campaign.id]);

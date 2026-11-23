@@ -161,6 +161,7 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
    | navy on cream | 8.9 | all text |
    | white 85% on navy / navy-dark | 7.8 / 9.7 | all text (header and footer) |
    | success on its bg / danger on its bg / navy on info bg | 6.5 / 5.9 / 8.2 | badges, messages |
+   | `--danger` on white | 6.5 | all text (e.g. the "too long" article counter; always with words, not colour alone) |
    | `--muted` on seafoam | 3.3 | **large text only** |
    | `--coral` on cream | 3.0 | **avoid**: put coral numbers on a white `.card` (or use `--coral-text`, 5.3) |
 

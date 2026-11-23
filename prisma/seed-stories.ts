@@ -5,7 +5,7 @@
  * Structure (from common advice on charity campaign pages): the need, why now, what a gift does in
  * rand, how the help reaches people, one voice from the community, and how donors are kept informed.
  */
-type SeedSlug = "winter-food-parcels" | "school-shoes" | "clean-water-tanks" | "library-books" | "flood-relief-2026";
+export type SeedSlug = "winter-food-parcels" | "school-shoes" | "clean-water-tanks" | "library-books" | "flood-relief-2026";
 
 export const CAMPAIGN_STORIES = {
   "winter-food-parcels": `## The need
@@ -161,3 +161,8 @@ The total on this page shows everything that was raised from completed donations
 
 Rebuilding takes much longer than the first emergency. We are working with local partners on what is needed now, and any future appeal will appear on our campaigns page.`,
 } satisfies Record<SeedSlug, string>;
+
+/** The slug and its article together, so each demo campaign's slug is written only once in seed.ts. */
+export function slugAndStory(slug: SeedSlug): { slug: SeedSlug; story: string } {
+  return { slug, story: CAMPAIGN_STORIES[slug] };
+}

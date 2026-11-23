@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublicCampaignBySlug } from "@/lib/queries/campaigns";
+import { getPublicCampaignPageBySlug } from "@/lib/queries/campaigns";
 import { campaignAvailability, notAcceptingReason } from "@/lib/campaigns";
 import { formatZar } from "@/lib/money";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -11,7 +11,7 @@ const dateFmt = new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeZone
 
 export default async function CampaignPage({ params }: PageProps<"/campaigns/[slug]">) {
   const { slug } = await params;
-  const campaign = await getPublicCampaignBySlug(slug);
+  const campaign = await getPublicCampaignPageBySlug(slug);
   if (!campaign) notFound();
 
   const availability = campaignAvailability(campaign);
