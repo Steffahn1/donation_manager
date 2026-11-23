@@ -18,7 +18,7 @@ export default async function NewCampaignPage() {
           campaignId={null}
           managers={managers}
           initial={{
-            name: "", description: "", target: "", startDate: today, endDate: today, status: "DRAFT",
+            name: "", description: "", story: "", target: "", startDate: today, endDate: today, status: "DRAFT",
             imagePath: "", impactAmount: "", impactLabel: "", managerId: "",
           }}
         />

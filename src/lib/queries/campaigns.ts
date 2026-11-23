@@ -20,13 +20,23 @@ export async function raisedByCampaign(campaignIds: string[]) {
 export async function getPublicCampaigns() {
   const campaigns = await db.campaign.findMany({
     where: { status: { in: ["ACTIVE", "CLOSED"] } },
+    omit: { story: true }, // the long article is only needed on the campaign's own page
     orderBy: [{ status: "asc" }, { endDate: "asc" }],
   });
   const totals = await raisedByCampaign(campaigns.map((c) => c.id));
   return campaigns.map((c) => ({ ...c, ...totals(c.id) }));
 }
 
+/** A public (non-draft) campaign with its totals, without the long article (e.g. the donate page). */
 export async function getPublicCampaignBySlug(slug: string) {
+  const campaign = await db.campaign.findUnique({ where: { slug }, omit: { story: true } });
+  if (!campaign || campaign.status === "DRAFT") return null;
+  const totals = await raisedByCampaign([campaign.id]);
+  return { ...campaign, ...totals(campaign.id) };
+}
+
+/** The same, plus the campaign's article: only for its own "Learn more" page. */
+export async function getPublicCampaignPageBySlug(slug: string) {
   const campaign = await db.campaign.findUnique({ where: { slug } });
   if (!campaign || campaign.status === "DRAFT") return null;
   const totals = await raisedByCampaign([campaign.id]);

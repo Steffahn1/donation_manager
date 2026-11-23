@@ -13,6 +13,7 @@ export function listManagers() {
 
 export function listAllCampaigns() {
   return db.campaign.findMany({
+    omit: { story: true }, // the list doesn't show articles; the edit form loads its own
     include: { manager: { select: { name: true } } },
     orderBy: [{ status: "asc" }, { startDate: "desc" }],
   });
@@ -26,6 +27,7 @@ export async function getCampaignFormValues(id: string): Promise<CampaignFormVal
   return {
     name: c.name,
     description: c.description,
+    story: c.story ?? "",
     target: rand(c.targetCents),
     startDate: dateIso(c.startDate),
     endDate: dateIso(c.endDate),

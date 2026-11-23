@@ -85,6 +85,10 @@ model Campaign {
   slug              String         @unique
   name              String
   description       String
+  /// Optional long-form article for the public campaign page ("Learn more"), written by the super admin.
+  /// Simple formatting only (see src/lib/story.ts): ## and ### headings, paragraphs, - and 1. lists,
+  /// > quotes, **bold**.
+  story             String?
   targetCents       Int
   startDate         DateTime       @db.Date
   endDate           DateTime       @db.Date

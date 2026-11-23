@@ -7,49 +7,17 @@ import { db } from "@/lib/db";
 import { hashPassword, requireRole } from "@/lib/auth";
 import { slugify } from "@/lib/campaigns";
 import { replaceableSignupWhere } from "@/lib/verification-rules";
-import { formatZar, parseRandToCents } from "@/lib/money";
 import { Prisma } from "@/generated/prisma/client";
 import { firstIssue } from "@/lib/form-errors";
+import { campaignSchema, submittedCampaignValues } from "@/lib/campaign-form";
 
-/** `field` is the input the error is about, for aria-invalid. */
-export type AdminFormState = { error?: string; field?: string; success?: string } | undefined;
-
-/** Campaign amounts are Postgres INT cents (max ~R21.4m); cap well below that. */
-const MAX_CAMPAIGN_CENTS = 10_000_000_00; // R10 000 000
-
-/** A real calendar date: "2026-02-31" matches the pattern but is rejected. */
-const isoDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a valid date.")
-  .refine((v) => {
-    const d = new Date(`${v}T00:00:00Z`);
-    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
-  }, "Use a valid date.");
-const randAmount = z
-  .string()
-  .transform((v) => parseRandToCents(v))
-  .refine((v): v is number => v !== null && v > 0, "Enter an amount in rand, e.g. 500 or 500,00.")
-  .refine((v) => v <= MAX_CAMPAIGN_CENTS, `Amounts can be at most ${formatZar(MAX_CAMPAIGN_CENTS)}.`);
-
-const campaignSchema = z
-  .object({
-    name: z.string().trim().min(3, "Name must be at least 3 characters.").max(100),
-    description: z.string().trim().min(10, "Add a short description.").max(5000),
-    target: randAmount,
-    startDate: isoDate,
-    endDate: isoDate,
-    status: z.enum(["DRAFT", "ACTIVE", "CLOSED"]),
-    imagePath: z
-      .string()
-      .trim()
-      .refine((v) => v === "" || (/^\/[\w\-./]+\.(jpg|jpeg|png|webp|svg)$/i.test(v) && !v.includes("..")), {
-        message: "Image must be a path under /public, e.g. /campaigns/food.jpg",
-      }),
-    impactAmount: randAmount,
-    impactLabel: z.string().trim().min(3, "Describe the impact, e.g. 'family fed for a week'.").max(80),
-    managerId: z.string().min(1, "Choose a campaign manager."),
-  })
-  .refine((d) => d.endDate >= d.startDate, { message: "End date must be on or after the start date.", path: ["endDate"] });
+/**
+ * `field` is the input the error is about, for aria-invalid. `values` echoes the submitted campaign
+ * form back on an error, so React's form reset doesn't throw away what the admin typed (e.g. a long article).
+ */
+export type AdminFormState =
+  | { error?: string; field?: string; success?: string; values?: Record<string, string> }
+  | undefined;
 
 /** Create (campaignId = null) or update a campaign. Super admin only. */
 export async function saveCampaign(
@@ -59,17 +27,19 @@ export async function saveCampaign(
 ): Promise<AdminFormState> {
   await requireRole("SUPER_ADMIN");
 
-  const parsed = campaignSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return firstIssue(parsed.error);
+  const values = submittedCampaignValues(formData);
+  const parsed = campaignSchema.safeParse(values);
+  if (!parsed.success) return { ...firstIssue(parsed.error), values };
   const d = parsed.data;
 
   // The assigned user must really be a campaign manager.
   const manager = await db.user.findFirst({ where: { id: d.managerId, role: "CAMPAIGN_MANAGER" } });
-  if (!manager) return { error: "Choose a valid campaign manager.", field: "managerId" };
+  if (!manager) return { error: "Choose a valid campaign manager.", field: "managerId", values };
 
   const data = {
     name: d.name,
     description: d.description,
+    story: d.story || null,
     targetCents: d.target,
     startDate: new Date(`${d.startDate}T00:00:00Z`),
     endDate: new Date(`${d.endDate}T00:00:00Z`),
@@ -88,10 +58,10 @@ export async function saveCampaign(
     }
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
-      return { error: "That campaign no longer exists." };
+      return { error: "That campaign no longer exists.", values };
     }
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "Another campaign was saved with the same name at the same moment. Please save again." };
+      return { error: "Another campaign was saved with the same name at the same moment. Please save again.", values };
     }
     throw e;
   }

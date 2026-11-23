@@ -34,7 +34,7 @@ export type DonateState =
 const successUrl = (sessionId: string) => `/donate/success?session_id=${encodeURIComponent(sessionId)}`;
 
 async function loadOpenCampaign(slug: string) {
-  const campaign = await db.campaign.findUnique({ where: { slug } });
+  const campaign = await db.campaign.findUnique({ where: { slug }, omit: { story: true } });
   if (!campaign || campaign.status === "DRAFT") return { error: "This campaign does not exist." } as const;
   if (!isAcceptingDonations(campaign)) return { error: notAcceptingReason(campaign) ?? "This campaign is closed." } as const;
   return { campaign } as const;
@@ -123,7 +123,7 @@ function toSessionInfo(s: Stripe.Checkout.Session): SessionInfo {
 /** Real Stripe + database wiring for the decision logic in checkout-flow.ts. */
 function checkoutDeps(
   donation: { id: string; createdAt: Date; amountCents: number; browserKeyHash: string | null },
-  ctx: { attemptId: string; campaign: Campaign; donorEmail: string; browserKeyHash: string },
+  ctx: { attemptId: string; campaign: Omit<Campaign, "story">; donorEmail: string; browserKeyHash: string },
 ): CheckoutDeps {
   return {
     now: () => new Date(),
