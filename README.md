@@ -191,8 +191,10 @@ Decisions I made along the way, for example:
 Reusable project skills (checklists the agent follows) live in `.claude/skills/`:
 [`/access-review`](.claude/skills/access-review/SKILL.md) (audits role checks, campaign scoping and
 masking), [`/test-payment-flow`](.claude/skills/test-payment-flow/SKILL.md) (guided Stripe test-card
-run), [`/ui-design-system`](.claude/skills/ui-design-system/SKILL.md) and
-[`/demo-reset`](.claude/skills/demo-reset/SKILL.md).
+run), [`/ui-design-system`](.claude/skills/ui-design-system/SKILL.md),
+[`/demo-reset`](.claude/skills/demo-reset/SKILL.md) (fresh demo data, starts everything) and
+[`/demo-stop`](.claude/skills/demo-stop/SKILL.md) (stops the dev server, `stripe listen` and the
+containers; keeps the data).
 
 ## Limitations
 
