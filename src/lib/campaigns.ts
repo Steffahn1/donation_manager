@@ -53,6 +53,21 @@ export function campaignAvailability(campaign: DonatableCampaign, now: Date = ne
   return "upcoming";
 }
 
+/** How many campaigns the landing page previews. */
+export const FEATURED_COUNT = 3;
+
+/**
+ * The campaigns featured on the landing page: only ones open for donations right now, the ones
+ * ending soonest first (they need help most urgently), at most FEATURED_COUNT. There is no
+ * "featured" setting: the choice is automatic, so it never needs a schema change.
+ */
+export function pickFeatured<T extends DonatableCampaign & { name: string }>(campaigns: T[], now: Date = new Date()): T[] {
+  return campaigns
+    .filter((c) => isAcceptingDonations(c, now))
+    .sort((a, b) => a.endDate.getTime() - b.endDate.getTime() || a.name.localeCompare(b.name, "en"))
+    .slice(0, FEATURED_COUNT);
+}
+
 /**
  * Prisma `where` filter limiting which campaigns a staff user may see.
  * Super admin: all. Campaign manager: only their own. Anyone else: nothing.

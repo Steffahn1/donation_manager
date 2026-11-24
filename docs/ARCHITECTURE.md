@@ -17,6 +17,7 @@ payments, donor accounts, reporting and privacy. Rules the code must never break
 | Signup, email confirmation, login | `src/lib/verification*.ts`, `src/lib/login.ts` |
 | Receipts and CSV exports | `src/lib/receipts.ts`, `src/lib/exports.ts`, `src/lib/csv.ts` |
 | Campaign articles ("Learn more" pages) | `src/lib/story.ts` (formatting), `src/components/CampaignStory.tsx` |
+| Landing page `/` (featured campaigns, no Donate buttons) | `src/app/page.tsx`, `pickFeatured` in `src/lib/campaigns.ts`, `getFeaturedCampaigns` in `src/lib/queries/campaigns.ts` |
 | Database queries (server only) | `src/lib/queries/` |
 | Schema, migrations, demo data | `prisma/` |
 
@@ -70,7 +71,7 @@ this browser tab's `sessionStorage`.
 
 ## Donor accounts and receipts
 
-- **Sign up** at `/signup` with just an email address. Every signup shows the same "check your email"
+- **Sign up** at `/signup` with just an email address (someone already logged in is sent to `/dashboard`). Every signup shows the same "check your email"
   page, immediately, whether or not the address already has an account. The email (open it in Mailpit
   at http://localhost:8025) links to a page where you **choose your name and password and confirm**;
   only submitting that form verifies the address (email scanners open links automatically). Links last

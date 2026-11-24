@@ -18,10 +18,19 @@ these rules. If a page needs something not covered here, ask the user and then a
   `story` (long-form campaign article: 68ch reading width, condensed navy h2/h3, navy list markers,
   quotes as navy italic on cream with a coral edge).
   `.on-dark` on a navy area switches focus rings to yellow.
+  Full-width pages: `full-bleed` (with `data-full-bleed`) on the page wrapper, `band-inner` for the centred
+  72rem column inside each band, `wave-divider` for the wavy SVG between bands (set `color` to the band it leads into),
+  `band-title` (with `heading`) and `band-lead` for a band's centred heading and lead, `dotted-bg` for the dotted background.
 - `src/app/layout.tsx`: loads the fonts once, navy header with skip link, navy-dark footer.
-- Components: `CampaignCard`, `ProgressBar` (pass `label` with the campaign name), `StatCard`, `CampaignImage`,
+- Components: `CampaignCard` (with Donate; `/campaigns`), `CampaignPreviewCard` (landing page: the same card,
+  but no Donate button and no status badge, only "Learn more" to the campaign page), `ProgressBar` (pass `label`
+  with the campaign name), `StatCard`, `CampaignImage`,
   `CampaignStory` (renders an article from `src/lib/story.ts` blocks; its headings start at h2).
-- `src/app/campaigns/campaigns.css`: page-only pieces of the showcase page (hero, wavy dividers, stats band), prefixed `cx-`.
+- `src/app/campaigns/campaigns.css`: page-only pieces of the showcase page (navy hero, wave colours, stats band,
+  list band padding), prefixed `cx-`.
+- `src/app/landing.css`: page-only pieces of the landing page `/` (light cream hero with two campaign pictures,
+  how-it-works steps, seafoam featured band, navy "why give here" band, closing call to action), prefixed `lp-`.
+  The landing page never has Donate buttons: donating starts on `/campaigns` or a campaign page.
 
 ## 0. How to apply it in this codebase
 
@@ -68,10 +77,11 @@ Three Google fonts via `next/font/google`:
 | Headings, buttons, labels, badges, table headers (`--font-condensed`) | Barlow Condensed 700 (400 for the light half of a two-tone heading) | UPPERCASE, letter-spacing 0.02em |
 | Reading text (`--font-lora`) | Lora 400 | Paragraphs, descriptions, table cells, inputs. Line-height 1.6–1.7 |
 
-Scale: hero `clamp(3rem, 9vw, 7rem)` (showcase pages only) · page title `.page-title` `clamp(2rem, 5vw, 3rem)` ·
-section title `.section-title` 1.6rem (a showcase band like "OUR CAMPAIGNS" on `/campaigns` may go up to
+Scale: hero `clamp(3rem, 9vw, 7rem)` (full-width navy hero, `/campaigns`) · light hero next to pictures
+`clamp(2.75rem, 7vw, 5.25rem)` (landing page `/`) · page title `.page-title` `clamp(2rem, 5vw, 3rem)` ·
+section title `.section-title` 1.6rem (a showcase band heading like "OUR CAMPAIGNS" uses `.band-title`:
 `clamp(2.5rem, 6vw, 3.75rem)`) · stat number `clamp(2.5rem, 5vw, 3.75rem)` in bands, 2.25rem in stat cards ·
-card title 1.75rem · body 1rem–1.15rem · small/meta 0.85rem (never smaller).
+card title 1.75rem · step/point title in a band (e.g. "how it works") 1.5rem · body 1rem–1.15rem · small/meta 0.85rem (never smaller).
 Two-tone section headings: first word bold, rest light (`OUR <span class=light>CAMPAIGNS</span>`).
 One `<h1>` per page; headings in order (h1 → h2 → h3), never skipped for looks.
 Money is always `formatZar` (exact) or the whole-rand helper for headline totals; numbers in tables use
@@ -83,13 +93,14 @@ Money is always `formatZar` (exact) or the whole-rand helper for headline totals
   `clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)` (6px for
   badges, 4px for progress bars); card images cut the top-right corner by 28px. No `rounded-*` on new UI.
 - Signature details: yellow hatched stripe under card images; coral swoosh under a kicker; wavy SVG dividers
-  between bands; faint dotted background (`radial-gradient(rgb(68 173 255 / .16) 1.5px, transparent 1.5px)`, 18px).
+  between bands (`.wave-divider`); faint dotted background (`.dotted-bg`: `radial-gradient(rgb(68 173 255 / .16) 1.5px,
+  transparent 1.5px)`, 18px).
   Use them sparingly: one hero/divider per page, not on every section.
 - Container: `max-width: 72rem`, side padding 1rem (16px). Sections: 3.5–5rem vertical padding. Grid gaps
   2–2.5rem. Inside a card: 1.25rem padding, 0.75–1rem between items.
-- Full-width bands break out of `<main>` with `margin-inline: calc(50% - 50vw)` and `data-full-bleed` on the wrapper.
-  To also touch the header/footer, cancel `<main>`'s padding with `margin-block: calc(-1 * var(--main-pad-y))`
-  (the variable is set in `globals.css` and used by `.main-pad` on `<main>`; never hard-code it).
+- Full-width bands: put `className="full-bleed"` and `data-full-bleed` on the page wrapper (`globals.css`). It breaks
+  out of `<main>` sideways (`margin-inline: calc(50% - 50vw)`) and cancels `<main>`'s padding
+  (`margin-block: calc(-1 * var(--main-pad-y))`) so the first band touches the header; never hard-code that padding.
 - Motion: hover lift `translateY(-6px)` + shadow on cards, `-2px` on buttons, 0.2–0.25s ease. Optional scroll-in
   via `animation-timeline: view()` inside `@supports`. Everything under `prefers-reduced-motion: no-preference`
   (or switched off under `reduce`). Nothing essential may depend on animation or hover.
@@ -159,6 +170,8 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
    | yellow on white | 1.8 | **never text, never a focus ring** |
    | `--muted` on white / on cream | 6.0 / 5.3 | all text |
    | navy on cream | 8.9 | all text |
+   | ink on cream / ink on seafoam | 10.5 / 8.3 | all text (landing page hero and featured band) |
+   | `--coral-text` on cream | 5.3 | all text (landing page kicker) |
    | white 85% on navy / navy-dark | 7.8 / 9.7 | all text (header and footer) |
    | success on its bg / danger on its bg / navy on info bg | 6.5 / 5.9 / 8.2 | badges, messages |
    | `--danger` on white | 6.5 | all text (e.g. the "too long" article counter; always with words, not colour alone) |

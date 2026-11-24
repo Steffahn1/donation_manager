@@ -98,6 +98,49 @@ body:has([data-full-bleed]) {
   .main-pad {
     padding-block: var(--main-pad-y);
   }
+
+  /* ---------- Full-width pages (/, /campaigns): put data-full-bleed on the same element ---------- */
+  /* Breaks out of the layout's centred <main>: sideways to the window edges, and up/down by <main>'s
+     own padding (--main-pad-y) so the first band touches the header and the last one the footer. */
+  .full-bleed {
+    margin-block: calc(-1 * var(--main-pad-y));
+    margin-inline: calc(50% - 50vw);
+  }
+  /* The centred content column inside a full-width band. */
+  .band-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  /* Wavy SVG divider between two bands; its fill is currentColor, so set `color` to the next band's colour. */
+  .wave-divider {
+    display: block;
+    width: 100%;
+    height: 48px;
+  }
+  /* Centred showcase band heading ("OUR CAMPAIGNS"); use with .heading. Navy unless the band overrides it. */
+  .band-title {
+    text-align: center;
+    color: var(--color-navy);
+    font-size: clamp(2.5rem, 6vw, 3.75rem);
+    line-height: 1;
+  }
+  .band-title .light {
+    font-weight: 400;
+  }
+  /* Centred lead paragraph under a band heading. */
+  .band-lead {
+    margin: 1rem auto 0;
+    max-width: 34rem;
+    text-align: center;
+    font-size: 1.15rem;
+    line-height: 1.7;
+  }
+  /* Faint dotted background; the band sets its own background-color underneath. */
+  .dotted-bg {
+    background-image: radial-gradient(rgb(68 173 255 / 0.16) 1.5px, transparent 1.5px);
+    background-size: 18px 18px;
+  }
   .card {
     @apply bg-white p-5;
     box-shadow: 0 1px 0 rgb(39 64 120 / 0.08), 0 0 0 1px rgb(39 64 120 / 0.04);
@@ -315,7 +358,7 @@ body:has([data-full-bleed]) {
     transition: width 0.6s ease;
   }
 
-  /* Campaign cards (home page and /campaigns). */
+  /* Campaign cards (/campaigns) and the landing page's preview cards. */
   .campaign-grid {
     @apply grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3;
   }

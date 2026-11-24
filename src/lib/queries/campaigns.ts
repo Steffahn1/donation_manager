@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { pickFeatured, todayIso } from "@/lib/campaigns";
 
 /** Gross raised (SUCCEEDED donations only) and donation count per campaign. */
 export async function raisedByCampaign(campaignIds: string[]) {
@@ -25,6 +26,37 @@ export async function getPublicCampaigns() {
   });
   const totals = await raisedByCampaign(campaigns.map((c) => c.id));
   return campaigns.map((c) => ({ ...c, ...totals(c.id) }));
+}
+
+/**
+ * The landing page's featured campaigns (see pickFeatured): open ones only, ending soonest first,
+ * at most three, with their totals (SUCCEEDED donations only). Public data only: no donor details,
+ * and only the fields a preview card shows.
+ */
+export async function getFeaturedCampaigns(now: Date) {
+  // Campaign dates are DATE columns (midnight UTC), so "open today" (Johannesburg date, as in
+  // isAcceptingDonations) is: ACTIVE, startDate <= today and endDate >= today. The database only
+  // returns the open campaigns; pickFeatured then orders them and keeps three.
+  const today = new Date(`${todayIso(now)}T00:00:00Z`);
+  const open = await db.campaign.findMany({
+    where: { status: "ACTIVE", startDate: { lte: today }, endDate: { gte: today } },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      imagePath: true,
+      status: true,
+      startDate: true,
+      endDate: true,
+      targetCents: true,
+      impactAmountCents: true,
+      impactLabel: true,
+    },
+  });
+  const featured = pickFeatured(open, now);
+  const totals = await raisedByCampaign(featured.map((c) => c.id));
+  return featured.map((c) => ({ ...c, ...totals(c.id) }));
 }
 
 /** A public (non-draft) campaign with its totals, without the long article (e.g. the donate page). */

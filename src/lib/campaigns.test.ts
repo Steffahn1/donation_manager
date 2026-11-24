@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { CurrentUser } from "./auth";
-import { campaignAvailability, campaignScopeFor, isAcceptingDonations, notAcceptingReason, slugify, todayIso } from "./campaigns";
+import {
+  FEATURED_COUNT,
+  campaignAvailability,
+  campaignScopeFor,
+  isAcceptingDonations,
+  notAcceptingReason,
+  pickFeatured,
+  slugify,
+  todayIso,
+} from "./campaigns";
 
 // Campaign dates are stored as Postgres DATE (midnight UTC).
 const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
@@ -96,5 +105,58 @@ describe("campaignAvailability", () => {
 
   it("is draft for a DRAFT campaign, even within its dates", () => {
     expect(campaignAvailability(campaign("DRAFT", "2026-06-01", "2026-06-30"), now)).toBe("draft");
+  });
+});
+
+describe("pickFeatured", () => {
+  const now = new Date("2026-11-15T10:00:00Z");
+  const make = (name: string, status: "DRAFT" | "ACTIVE" | "CLOSED", start: string, end: string) => ({
+    name,
+    status,
+    startDate: day(start),
+    endDate: day(end),
+  });
+
+  it("only features campaigns open for donations now", () => {
+    const picked = pickFeatured(
+      [
+        make("Open", "ACTIVE", "2026-11-01", "2026-12-01"),
+        make("Draft", "DRAFT", "2026-11-01", "2026-12-01"),
+        make("Closed", "CLOSED", "2026-11-01", "2026-12-01"),
+        make("Ended", "ACTIVE", "2026-10-01", "2026-11-10"),
+        make("Upcoming", "ACTIVE", "2026-12-01", "2026-12-31"),
+      ],
+      now,
+    );
+    expect(picked.map((c) => c.name)).toEqual(["Open"]);
+  });
+
+  it("puts the campaigns ending soonest first and shows at most three", () => {
+    const picked = pickFeatured(
+      [
+        make("Late", "ACTIVE", "2026-11-01", "2027-01-31"),
+        make("Soon", "ACTIVE", "2026-11-01", "2026-11-20"),
+        make("Middle B", "ACTIVE", "2026-11-01", "2026-12-15"),
+        make("Middle A", "ACTIVE", "2026-11-01", "2026-12-15"),
+      ],
+      now,
+    );
+    expect(picked).toHaveLength(FEATURED_COUNT);
+    // Same end date: alphabetical, so the order is stable.
+    expect(picked.map((c) => c.name)).toEqual(["Soon", "Middle A", "Middle B"]);
+  });
+
+  it("returns nothing when no campaign is open", () => {
+    expect(pickFeatured([make("Closed", "CLOSED", "2026-11-01", "2026-12-01")], now)).toEqual([]);
+  });
+
+  it("doesn't reorder the caller's array", () => {
+    const input = [
+      make("Late", "ACTIVE", "2026-11-01", "2027-01-31"),
+      make("Middle", "ACTIVE", "2026-11-01", "2026-12-15"),
+      make("Soon", "ACTIVE", "2026-11-01", "2026-11-20"),
+    ];
+    expect(pickFeatured(input, now).map((c) => c.name)).toEqual(["Soon", "Middle", "Late"]);
+    expect(input.map((c) => c.name)).toEqual(["Late", "Middle", "Soon"]);
   });
 });
