@@ -53,4 +53,4 @@ Run from the project root. Only ever touch THIS project's processes and containe
    Mailpit), what was already off, and anything left alone because it wasn't from this project. End with:
    - Data is kept. To start again: `/demo-reset` (fresh demo data), or `docker compose up -d` + `npm run dev`
      to continue with the current data, plus `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
-     for payments.
+     for payments (and `npx prisma studio --port 5555` to browse the data).
