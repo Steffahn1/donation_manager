@@ -4,8 +4,10 @@ import {
   FEATURED_COUNT,
   campaignAvailability,
   campaignScopeFor,
+  formatCampaignDay,
   isAcceptingDonations,
   notAcceptingReason,
+  openCampaignsWhere,
   pickFeatured,
   slugify,
   todayIso,
@@ -158,5 +160,36 @@ describe("pickFeatured", () => {
     ];
     expect(pickFeatured(input, now).map((c) => c.name)).toEqual(["Soon", "Middle", "Late"]);
     expect(input.map((c) => c.name)).toEqual(["Late", "Middle", "Soon"]);
+  });
+});
+
+describe("openCampaignsWhere", () => {
+  type Status = "DRAFT" | "ACTIVE" | "CLOSED";
+  // How Postgres applies the filter to one row (DATE columns compare as midnight UTC).
+  const matches = (c: { status: Status; startDate: Date; endDate: Date }, now: Date) => {
+    const w = openCampaignsWhere(now);
+    return c.status === w.status && c.startDate <= w.startDate.lte && c.endDate >= w.endDate.gte;
+  };
+
+  it("matches exactly the campaigns isAcceptingDonations accepts, around the start and end dates", () => {
+    const instants = [
+      "2026-11-09T21:59:00Z", // 23:59 SAST the day before the start
+      "2026-11-09T22:01:00Z", // 00:01 SAST on the start date
+      "2026-11-15T10:00:00Z",
+      "2026-11-20T21:59:00Z", // 23:59 SAST on the end date
+      "2026-11-20T22:01:00Z", // 00:01 SAST the day after
+    ].map((t) => new Date(t));
+    for (const status of ["DRAFT", "ACTIVE", "CLOSED"] as const) {
+      for (const now of instants) {
+        const c = { ...campaign, status };
+        expect(matches(c, now), `${status} at ${now.toISOString()}`).toBe(isAcceptingDonations(c, now));
+      }
+    }
+  });
+});
+
+describe("formatCampaignDay", () => {
+  it("shows the day and month", () => {
+    expect(formatCampaignDay(day("2026-12-20"))).toBe("20 December");
   });
 });

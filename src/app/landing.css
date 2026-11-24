@@ -32,6 +32,7 @@
   }
 }
 
+/* Small kicker above the headline (design system scale: 1.35rem). */
 .lp-kicker {
   color: var(--color-coral-text);
   font-size: 1.35rem;
@@ -70,6 +71,12 @@
 .lp-actions .btn-secondary {
   padding: 0.5rem 2rem;
   font-size: 1.2rem;
+}
+
+/* The usual cream hover doesn't show on the cream hero: fill navy instead (white on navy 10.0:1). */
+.lp-actions .btn-secondary:hover {
+  background: var(--color-navy);
+  color: #fff;
 }
 
 /* Two overlapping campaign pictures (decoration only, hidden on small screens). */
@@ -172,7 +179,8 @@
 
 .lp-trust {
   background: var(--color-navy);
-  color: rgb(255 255 255 / 0.88);
+  /* White 85% on navy: 7.8:1. */
+  color: rgb(255 255 255 / 0.85);
   /* Overlap the waves by 1px so no hairline shows between them at odd zoom levels. */
   margin-block: -1px;
   padding: 2.5rem 0 3rem;

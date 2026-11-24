@@ -13,6 +13,13 @@ export function todayIso(now: Date = new Date()): string {
   }).format(now);
 }
 
+const dayFmt = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", timeZone: CHARITY_TIME_ZONE });
+
+/** A campaign date for donors, e.g. "20 December" (shared by the campaign cards). */
+export function formatCampaignDay(date: Date): string {
+  return dayFmt.format(date);
+}
+
 /** Campaign dates are stored as Postgres DATE (midnight UTC); compare as YYYY-MM-DD. */
 export function dateIso(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -51,6 +58,15 @@ export function campaignAvailability(campaign: DonatableCampaign, now: Date = ne
   if (campaign.status === "DRAFT") return "draft";
   if (campaign.status === "CLOSED" || todayIso(now) > dateIso(campaign.endDate)) return "closed";
   return "upcoming";
+}
+
+/**
+ * Database filter for campaigns open for donations today: the same rule as isAcceptingDonations,
+ * written for DATE columns (stored as midnight UTC), with "today" as the Johannesburg date.
+ */
+export function openCampaignsWhere(now: Date = new Date()) {
+  const today = new Date(`${todayIso(now)}T00:00:00Z`);
+  return { status: "ACTIVE" as const, startDate: { lte: today }, endDate: { gte: today } };
 }
 
 /** How many campaigns the landing page previews. */

@@ -1,10 +1,9 @@
 import Link from "next/link";
+import { formatCampaignDay } from "@/lib/campaigns";
 import { formatZar } from "@/lib/money";
 import { CampaignImage } from "./CampaignImage";
 import { ProgressBar } from "./ProgressBar";
 import type { CampaignCardData } from "./CampaignCard";
-
-const dayFmt = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", timeZone: "Africa/Johannesburg" });
 
 /**
  * A campaign preview for the landing page. Same look and order as CampaignCard (image, title, text,
@@ -29,7 +28,7 @@ export function CampaignPreviewCard({ campaign: c }: { campaign: CampaignCardDat
 
         <div className="mt-auto">
           <ProgressBar raisedCents={c.raisedCents} targetCents={c.targetCents} label={`${c.name}: raised towards target`} />
-          <p className="text-muted mt-1.5 text-sm">Open until {dayFmt.format(c.endDate)}</p>
+          <p className="text-muted mt-1.5 text-sm">Open until {formatCampaignDay(c.endDate)}</p>
         </div>
 
         <Link href={`/campaigns/${c.slug}`} className="arrow-link self-start" aria-label={`Learn more about ${c.name}`}>

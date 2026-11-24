@@ -205,14 +205,16 @@ was clicked through in the browser at desktop and phone width. Open items are un
   campaigns, "why give here" on a navy band (card details stay with Stripe, anonymous giving, only
   completed payments count) and a closing "Ready to help?" call to action.
 - **No Donate buttons on `/`**: the featured previews (`CampaignPreviewCard`: the same card as on
-  `/campaigns`, minus the Donate button) only link to each campaign's own page. Donating starts on
+  `/campaigns`, but with no Donate button and no status badge, since only open campaigns are shown)
+  only link to each campaign's own page. Donating starts on
   `/campaigns` or a campaign page. No site-wide totals on `/` (they stay on `/campaigns`); each preview
   shows its own campaign's progress. The `/donate/[slug]` URL still works directly: the Donate buttons,
   "Try again" (after a cancelled payment) and "Start again" (expired payment page) all go there.
 - Featured campaigns are chosen automatically, no schema change: only campaigns open for donations
   today, ending soonest first, at most 3. The database returns only today's open campaigns with the
-  card's fields (`getFeaturedCampaigns` in `src/lib/queries/campaigns.ts`); `pickFeatured` in
-  `src/lib/campaigns.ts` (unit-tested) orders them and keeps 3. If none is open, the page says so.
+  card's fields (`getFeaturedCampaigns` in `src/lib/queries/campaigns.ts`, filter `openCampaignsWhere`);
+  `pickFeatured` orders them and keeps 3. Both are in `src/lib/campaigns.ts` and unit-tested (the
+  filter is checked against `isAcceptingDonations` around the start and end dates). If none is open, the page says so.
   That part renders per request (`connection()` inside `<Suspense>`), so "open today" is never stale.
 - "Track your giving" goes to `/signup`; a visitor who is already logged in is sent on from `/signup`
   to `/dashboard` (checked with a guest and a logged-in donor).
@@ -227,7 +229,10 @@ was clicked through in the browser at desktop and phone width. Open items are un
   fields; a real test that the caller's list isn't reordered; the `<img>` lint exception covers only
   the two decorative pictures; both hero buttons are the same size; no hairline between the waves
   and the navy band.
-- Checked: typecheck, lint, 240 tests, build, `/access-review` PASS; in the rendered HTML: one h1,
+- Second review fixes: the kicker size and the navy band's text colour (white 85%) are in the design
+  system; "Track your giving" fills navy on hover (cream didn't show on the cream hero); both campaign
+  cards share one date format (`formatCampaignDay`); the open-today database filter has its own tests.
+- Checked: typecheck, lint, 242 tests, build, `/access-review` PASS; in the rendered HTML: one h1,
   then h2s and h3s; no `/donate/` links on `/`; Donate buttons still on `/campaigns`.
 - **Still open: a look in the browser** (desktop, 375px and 320px, tabbing through the focus rings).
   The browser extension wasn't connected while this was built.

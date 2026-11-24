@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { pickFeatured, todayIso } from "@/lib/campaigns";
+import { openCampaignsWhere, pickFeatured } from "@/lib/campaigns";
 
 /** Gross raised (SUCCEEDED donations only) and donation count per campaign. */
 export async function raisedByCampaign(campaignIds: string[]) {
@@ -34,12 +34,10 @@ export async function getPublicCampaigns() {
  * and only the fields a preview card shows.
  */
 export async function getFeaturedCampaigns(now: Date) {
-  // Campaign dates are DATE columns (midnight UTC), so "open today" (Johannesburg date, as in
-  // isAcceptingDonations) is: ACTIVE, startDate <= today and endDate >= today. The database only
-  // returns the open campaigns; pickFeatured then orders them and keeps three.
-  const today = new Date(`${todayIso(now)}T00:00:00Z`);
+  // The database only returns today's open campaigns (openCampaignsWhere, tested against
+  // isAcceptingDonations); pickFeatured then orders them and keeps three.
   const open = await db.campaign.findMany({
-    where: { status: "ACTIVE", startDate: { lte: today }, endDate: { gte: today } },
+    where: openCampaignsWhere(now),
     select: {
       id: true,
       slug: true,

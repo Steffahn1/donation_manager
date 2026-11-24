@@ -81,7 +81,8 @@ Scale: hero `clamp(3rem, 9vw, 7rem)` (full-width navy hero, `/campaigns`) · lig
 `clamp(2.75rem, 7vw, 5.25rem)` (landing page `/`) · page title `.page-title` `clamp(2rem, 5vw, 3rem)` ·
 section title `.section-title` 1.6rem (a showcase band heading like "OUR CAMPAIGNS" uses `.band-title`:
 `clamp(2.5rem, 6vw, 3.75rem)`) · stat number `clamp(2.5rem, 5vw, 3.75rem)` in bands, 2.25rem in stat cards ·
-card title 1.75rem · step/point title in a band (e.g. "how it works") 1.5rem · body 1rem–1.15rem · small/meta 0.85rem (never smaller).
+card title 1.75rem · step/point title in a band (e.g. "how it works") 1.5rem · small kicker above a light hero
+headline 1.35rem · body 1rem–1.15rem · small/meta 0.85rem (never smaller).
 Two-tone section headings: first word bold, rest light (`OUR <span class=light>CAMPAIGNS</span>`).
 One `<h1>` per page; headings in order (h1 → h2 → h3), never skipped for looks.
 Money is always `formatZar` (exact) or the whole-rand helper for headline totals; numbers in tables use
@@ -112,7 +113,8 @@ Money is always `formatZar` (exact) or the whole-rand helper for headline totals
   white-on-coral counts as large text (3.4:1); smaller buttons use `--coral-dark` as the base colour instead.
 - *Outline on dark:* white text, 2px white edge drawn as `box-shadow: inset 0 0 0 2px` (clip-path hides borders);
   hover fills white with navy text.
-- *Secondary on light:* navy text, inset 2px navy edge; hover `--cream` fill.
+- *Secondary on light:* navy text, inset 2px navy edge; hover `--cream` fill (on a cream background, e.g. the
+  landing hero, hover fills navy with white text instead, so the change is visible).
 - *Text link with arrow:* navy condensed uppercase + yellow `↗` (aria-hidden) that nudges on hover; underline on hover.
 - *Disabled:* 50% opacity, `cursor: not-allowed`, and the real `disabled` attribute.
 - One primary button per card or form. Destructive actions (delete, the irreversible "Show my name") say what
@@ -172,7 +174,7 @@ and an `aria-label` naming the campaign; the percentage is also written as text.
    | navy on cream | 8.9 | all text |
    | ink on cream / ink on seafoam | 10.5 / 8.3 | all text (landing page hero and featured band) |
    | `--coral-text` on cream | 5.3 | all text (landing page kicker) |
-   | white 85% on navy / navy-dark | 7.8 / 9.7 | all text (header and footer) |
+   | white 85% on navy / navy-dark | 7.8 / 9.7 | all text (header, footer, the landing page's navy band) |
    | success on its bg / danger on its bg / navy on info bg | 6.5 / 5.9 / 8.2 | badges, messages |
    | `--danger` on white | 6.5 | all text (e.g. the "too long" article counter; always with words, not colour alone) |
    | `--muted` on seafoam | 3.3 | **large text only** |
