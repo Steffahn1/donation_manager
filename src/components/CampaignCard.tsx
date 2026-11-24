@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { campaignAvailability } from "@/lib/campaigns";
+import { campaignAvailability, formatCampaignDay } from "@/lib/campaigns";
 import { formatZar } from "@/lib/money";
 import { CampaignImage } from "./CampaignImage";
 import { ProgressBar } from "./ProgressBar";
@@ -19,8 +19,6 @@ export type CampaignCardData = {
   impactLabel: string;
 };
 
-const dayFmt = new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "long", timeZone: "Africa/Johannesburg" });
-
 /** A public campaign card (design system: image → title → text → impact chip → amount → progress → actions). */
 export function CampaignCard({ campaign: c }: { campaign: CampaignCardData }) {
   const availability = campaignAvailability(c);
@@ -31,7 +29,7 @@ export function CampaignCard({ campaign: c }: { campaign: CampaignCardData }) {
         <CampaignImage src={c.imagePath} alt={c.name} />
         {availability === "closed" && <span className="badge badge-closed absolute top-3 left-3">Closed</span>}
         {availability === "upcoming" && (
-          <span className="badge badge-info absolute top-3 left-3">Starts {dayFmt.format(c.startDate)}</span>
+          <span className="badge badge-info absolute top-3 left-3">Starts {formatCampaignDay(c.startDate)}</span>
         )}
       </div>
       <div className="hatch-stripe" aria-hidden="true" />
@@ -47,9 +45,9 @@ export function CampaignCard({ campaign: c }: { campaign: CampaignCardData }) {
           <ProgressBar raisedCents={c.raisedCents} targetCents={c.targetCents} label={`${c.name}: raised towards target`} />
           <p className="text-muted mt-1.5 text-sm">
             {accepting
-              ? `Open until ${dayFmt.format(c.endDate)}`
+              ? `Open until ${formatCampaignDay(c.endDate)}`
               : availability === "upcoming"
-                ? `Opens for donations on ${dayFmt.format(c.startDate)}`
+                ? `Opens for donations on ${formatCampaignDay(c.startDate)}`
                 : "No longer accepting donations"}
           </p>
         </div>

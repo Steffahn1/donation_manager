@@ -8,7 +8,7 @@ import "./campaigns.css";
 
 /*
  * The design system's showcase page. Shared pieces (buttons, cards, progress bars) come from
- * globals.css; the hero, wavy dividers and stats band are page-only (campaigns.css, prefixed cx-).
+ * globals.css; the hero, the wave colours and the stats band are page-only (campaigns.css, prefixed cx-).
  * Data: public campaigns (ACTIVE and CLOSED, never DRAFT), totals from SUCCEEDED donations only,
  * and no donor details.
  */
@@ -22,9 +22,9 @@ function wholeRand(cents: number): string {
 
 export default function CampaignsPage() {
   return (
-    <div data-full-bleed className="cx-page">
+    <div data-full-bleed className="full-bleed">
       <section className="cx-hero on-dark">
-        <div className="cx-inner">
+        <div className="band-inner">
           <p className="cx-kicker heading">
             Every rand counts
             <svg className="cx-swoosh" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
@@ -47,7 +47,7 @@ export default function CampaignsPage() {
         </div>
       </section>
 
-      <svg className="cx-wave cx-waveIntoStats" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true">
+      <svg className="wave-divider cx-waveIntoStats" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 22 C 240 4, 520 40, 780 24 S 1220 2, 1440 18 L 1440 48 L 0 48 Z" fill="currentColor" />
       </svg>
 
@@ -68,7 +68,7 @@ async function CampaignsContent() {
   return (
     <>
       <section className="cx-stats" aria-label="Totals across all campaigns">
-        <div className="cx-inner cx-statGrid">
+        <div className="band-inner cx-statGrid">
           <div>
             <p className="cx-statValue font-display">{wholeRand(raisedCents)}</p>
             <p className="cx-statLabel heading">raised across all campaigns</p>
@@ -84,16 +84,16 @@ async function CampaignsContent() {
         </div>
       </section>
 
-      <svg className="cx-wave cx-waveOutOfStats" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true">
+      <svg className="wave-divider cx-waveOutOfStats" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 0 L 1440 0 L 1440 26 C 1200 46, 900 10, 640 28 S 200 44, 0 24 Z" fill="currentColor" />
       </svg>
 
-      <section id="campaigns" className="cx-listSection">
-        <div className="cx-inner">
-          <h2 className="cx-sectionTitle heading">
+      <section id="campaigns" className="cx-listSection dotted-bg">
+        <div className="band-inner">
+          <h2 className="band-title heading">
             Our <span className="light">campaigns</span>
           </h2>
-          <p className="cx-sectionLead">
+          <p className="band-lead">
             Each campaign has a clear goal. Amounts shown are gross, before payment-provider fees, and only completed
             payments are counted.
           </p>

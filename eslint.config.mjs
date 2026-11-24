@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Output of the Understand Anything plugin (/understand), git-ignored: not project code.
+    ".ua/**",
   ]),
 ]);
 

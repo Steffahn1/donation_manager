@@ -139,7 +139,7 @@ was clicked through in the browser at desktop and phone width. Open items are un
   campaign images, wavy dividers, hover lift and CSS-only scroll-in motion (off with reduced motion).
 - `/campaigns` became the showcase page (hero, totals band, campaign cards). Then rolled out to every
   page: tokens and shared classes in `globals.css`, fonts loaded once in the root layout, new
-  `CampaignCard` component (home page and `/campaigns`), restyled `ProgressBar`, `StatCard`, forms,
+  `CampaignCard` component (`/campaigns`; the home page later got its own preview card), restyled `ProgressBar`, `StatCard`, forms,
   tables, badges and charts. Behaviour, data loading and privacy rules unchanged.
 - Rules live in the `/ui-design-system` skill (`.claude/skills/ui-design-system/SKILL.md`).
 - Accessibility: contrast checked for every colour pair (WCAG AA), visible focus ring on every control
@@ -198,6 +198,44 @@ was clicked through in the browser at desktop and phone width. Open items are un
 - Future work: images inside articles (needs image upload first).
 - Checked: typecheck, lint, 236 tests, build; every campaign page at desktop, 375px and 320px width
   with no sideways scroll; headings in order (one h1, then h2s).
+
+## Landing page
+- `/` is now a landing page instead of a copy of `/campaigns`: a light cream hero ("Small gifts. Real
+  change.", with two campaign pictures on wide screens), how it works in 3 steps, up to 3 featured
+  campaigns, "why give here" on a navy band (card details stay with Stripe, anonymous giving, only
+  completed payments count) and a closing "Ready to help?" call to action.
+- **No Donate buttons on `/`**: the featured previews (`CampaignPreviewCard`: the same card as on
+  `/campaigns`, but with no Donate button and no status badge, since only open campaigns are shown)
+  only link to each campaign's own page. Donating starts on
+  `/campaigns` or a campaign page. No site-wide totals on `/` (they stay on `/campaigns`); each preview
+  shows its own campaign's progress. The `/donate/[slug]` URL still works directly: the Donate buttons,
+  "Try again" (after a cancelled payment) and "Start again" (expired payment page) all go there.
+- Featured campaigns are chosen automatically, no schema change: only campaigns open for donations
+  today, ending soonest first, at most 3. The database returns only today's open campaigns with the
+  card's fields (`getFeaturedCampaigns` in `src/lib/queries/campaigns.ts`, filter `openCampaignsWhere`);
+  `pickFeatured` orders them and keeps 3. Both are in `src/lib/campaigns.ts` and unit-tested (the
+  filter is checked against `isAcceptingDonations` around the start and end dates). If none is open, the page says so.
+  That part renders per request (`connection()` inside `<Suspense>`), so "open today" is never stale.
+- "Track your giving" goes to `/signup`; a visitor who is already logged in is sent on from `/signup`
+  to `/dashboard` (checked with a guest and a logged-in donor).
+- Shared classes in `globals.css`, used by `/` and `/campaigns` (which looks the same): `full-bleed`,
+  `band-inner`, `wave-divider`, `band-title`, `band-lead`, `dotted-bg`. `CampaignGrid` was removed
+  (only the old home page used it).
+- ESLint now ignores `.ua/` (the Understand Anything plugin's git-ignored output), which made
+  `npm run lint` fail although it isn't project code.
+- Review fixes: corrected this entry's list of what uses `/donate/[slug]`; preview cards got the
+  impact chip and 3-line text back; copied styles became the shared classes above, and font sizes
+  follow the design system's scale; the featured query only loads open campaigns and the card's
+  fields; a real test that the caller's list isn't reordered; the `<img>` lint exception covers only
+  the two decorative pictures; both hero buttons are the same size; no hairline between the waves
+  and the navy band.
+- Second review fixes: the kicker size and the navy band's text colour (white 85%) are in the design
+  system; "Track your giving" fills navy on hover (cream didn't show on the cream hero); both campaign
+  cards share one date format (`formatCampaignDay`); the open-today database filter has its own tests.
+- Checked: typecheck, lint, 242 tests, build, `/access-review` PASS; in the rendered HTML: one h1,
+  then h2s and h3s; no `/donate/` links on `/`; Donate buttons still on `/campaigns`.
+- **Still open: a look in the browser** (desktop, 375px and 320px, tabbing through the focus rings).
+  The browser extension wasn't connected while this was built.
 
 ## Known issues / notes
 - No rate limit on signup: someone could trigger many verification emails to one address.
